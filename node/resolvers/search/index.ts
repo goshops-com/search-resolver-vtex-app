@@ -1,0 +1,649 @@
+import { NotFoundError, UserInputError, createMessagesLoader } from '@vtex/api'
+import { pathOr } from 'ramda'
+
+import {
+  buildAttributePath,
+  convertOrderBy,
+} from '../../commons/compatibility-layer'
+import {
+  fetchAutocompleteSuggestions,
+  fetchCorrection,
+  fetchSearchSuggestions,
+  fetchTopSearches,
+} from '../../services/autocomplete'
+import { fetchBanners } from '../../services/banners'
+import { fetchFacets } from '../../services/facets'
+import type {
+  ProductArgs,
+  ProductIdentifier,
+  ProductsByIdentifierArgs,
+} from '../../services/product'
+import {
+  resolveProduct,
+  resolveProductsByIdentifier,
+} from '../../services/product'
+import { fetchProductSearch } from '../../services/productSearch'
+import { fetchAppSettings } from '../../services/settings'
+import type {
+  FacetsInput,
+  ProductSearchInput,
+  ProductsInput,
+  SuggestionProductsArgs,
+} from '../../typings/Search'
+import { applyHideUnavailableItemsDefaultForDP } from '../../utils/hideUnavailableItems'
+import { shouldTranslateToTenantLocale } from '../../utils/i18n'
+import { extractSegmentData, getOrCreateSegment } from '../../utils/segment'
+import { resolvers as assemblyOptionResolvers } from './assemblyOption'
+import { resolvers as autocompleteResolvers } from './autocomplete'
+import { resolvers as brandResolvers } from './brand'
+import { resolvers as categoryResolvers } from './category'
+import { MAP_VALUES_SEP, PATH_SEPARATOR } from './constants'
+import { resolvers as discountResolvers } from './discount'
+import { resolvers as itemMetadataResolvers } from './itemMetadata'
+import { resolvers as itemMetadataPriceTableItemResolvers } from './itemMetadataPriceTableItem'
+import { resolvers as itemMetadataUnitResolvers } from './itemMetadataUnit'
+import { getSearchMetaData } from './modules/metadata'
+import { toCompatibilityArgs } from './newURLs'
+import { resolvers as offerResolvers } from './offer'
+import { resolvers as productResolvers } from './product'
+import { resolvers as productPriceRangeResolvers } from './productPriceRange'
+import { resolvers as recommendationResolvers } from './recommendation'
+import { resolvers as searchBreadcrumbResolvers } from './searchBreadcrumb'
+import { resolvers as skuResolvers } from './sku'
+import { resolvers as skuSpecificationResolver } from './skuSpecification'
+import { resolvers as skuSpecificationFieldResolver } from './skuSpecificationField'
+import { resolvers as skuSpecificationValueResolver } from './skuSpecificationValue'
+import {
+  SearchCrossSellingTypes,
+  getMapAndPriceRangeFromSelectedFacets,
+  getShippingOptionsFromSelectedFacets,
+  validMapAndQuery,
+} from './utils'
+
+enum CrossSellingInput {
+  view = 'view',
+  buy = 'buy',
+  similars = 'similars',
+  viewAndBought = 'viewAndBought',
+  suggestions = 'suggestions',
+  accessories = 'accessories',
+}
+
+enum CrossSellingGroupByInput {
+  PRODUCT = 'PRODUCT',
+  NONE = 'NONE',
+}
+
+// Legacy search format is our search with path?map=c,c,specificationFilter
+// Where it has specificationFilters and all segments in path are mapped in `map` querystring
+const isLegacySearchFormat = ({
+  query,
+  map,
+}: {
+  query?: string
+  map?: string
+}) => {
+  if (!map || !query) {
+    return false
+  }
+
+  return map.split(MAP_VALUES_SEP).length === query.split(PATH_SEPARATOR).length
+}
+
+export const getCompatibilityArgs = async <T extends QueryArgs>(
+  ctx: Context,
+  args: T
+) => {
+  const {
+    clients: { vbase, search },
+  } = ctx
+
+  const compatArgs = isLegacySearchFormat(args)
+    ? args
+    : await toCompatibilityArgs(vbase, search, args)
+
+  const formattedArgs = compatArgs ? { ...args, ...compatArgs } : args
+
+  // VTEX search does not understand brand/category/department and fails with error:
+  //  Query contains something not suited for search
+  formattedArgs.map = formattedArgs.map
+    ?.replace(/brand/g, 'b')
+    ?.replace(/category(-[0-9]*)?/g, 'c')
+
+  return formattedArgs
+}
+
+interface ProductRecommendationArg {
+  identifier?: ProductIdentifier
+  type?: CrossSellingInput
+  groupBy?: CrossSellingGroupByInput
+}
+
+const inputToSearchCrossSelling = {
+  [CrossSellingInput.buy]: SearchCrossSellingTypes.whoboughtalsobought,
+  [CrossSellingInput.view]: SearchCrossSellingTypes.whosawalsosaw,
+  [CrossSellingInput.similars]: SearchCrossSellingTypes.similars,
+  [CrossSellingInput.viewAndBought]: SearchCrossSellingTypes.whosawalsobought,
+  [CrossSellingInput.accessories]: SearchCrossSellingTypes.accessories,
+  [CrossSellingInput.suggestions]: SearchCrossSellingTypes.suggestions,
+}
+
+/**
+ * There is an URL pattern in VTEX where the number of mapSegments doesn't match the number of querySegments. This function deals with these cases.
+ * Since this should not be a search concern, this function will be removed soon.
+ *
+ * @param {Context} ctx
+ * @param {QueryArgs} args
+ * @returns
+ */
+/** Args that can be normalized via `map` / `query` / `selectedFacets` compatibility helpers. */
+type SelectedFacetsCompatibilityArgs = {
+  query?: string
+  map?: string
+  selectedFacets?: SelectedFacet[]
+}
+
+const getCompatibilityArgsFromSelectedFacets = async <
+  T extends SelectedFacetsCompatibilityArgs
+>(
+  ctx: Context,
+  args: T
+): Promise<T> => {
+  const { selectedFacets, query } = args
+
+  if (!selectedFacets || selectedFacets.length === 0 || !query) {
+    return args
+  }
+
+  const [map, priceRange] = getMapAndPriceRangeFromSelectedFacets([
+    ...selectedFacets,
+  ])
+
+  args.map = map
+
+  if (isLegacySearchFormat({ query: args.query, map: args.map })) {
+    return args
+  }
+
+  const compatibilityArgs = await getCompatibilityArgs(ctx, args as QueryArgs)
+
+  const mapSegments = compatibilityArgs.map!.split(MAP_VALUES_SEP)
+  const querySegments = compatibilityArgs.query!.split(PATH_SEPARATOR)
+
+  args.selectedFacets = mapSegments.map((map, index) => {
+    return {
+      key: map,
+      value: querySegments[index],
+    }
+  })
+
+  if (priceRange) {
+    args.selectedFacets.push({
+      key: 'priceRange',
+      value: priceRange,
+    })
+  }
+
+  return args
+}
+
+const translateToStoreDefaultLanguage = async (
+  ctx: Context,
+  term: string
+): Promise<string> => {
+  const {
+    clients,
+    state,
+    vtex: { locale: from, tenant },
+  } = ctx
+
+  const { locale: to } = tenant!
+
+  if (!shouldTranslateToTenantLocale(ctx)) {
+    // Do not translate if string already in correct language
+    return term
+  }
+
+  if (!state.messagesTenantLanguage) {
+    state.messagesTenantLanguage = createMessagesLoader(clients, to)
+  }
+
+  return state.messagesTenantLanguage!.load({
+    from: from!,
+    content: term,
+  })
+}
+
+const noop = () => {}
+
+// Does prefetching and warms up cache for up to the 10 first elements of a search, so if user clicks on product page
+const searchFirstElements = (
+  products: SearchProduct[],
+  from: number | null = 0,
+  search: Context['clients']['search']
+) => {
+  if (from !== 0 || from == null) {
+    // We do not want this for pages other than the first
+    return
+  }
+
+  products
+    .slice(0, Math.min(10, products.length))
+    .forEach((product) =>
+      search
+        .productById(product.productId, undefined, undefined, false)
+        .catch(noop)
+    )
+}
+
+export const fieldResolvers = {
+  ...autocompleteResolvers,
+  ...brandResolvers,
+  ...categoryResolvers,
+  ...itemMetadataResolvers,
+  ...itemMetadataUnitResolvers,
+  ...itemMetadataPriceTableItemResolvers,
+  ...offerResolvers,
+  ...discountResolvers,
+  ...productResolvers,
+  ...recommendationResolvers,
+  ...skuResolvers,
+  ...skuSpecificationResolver,
+  ...skuSpecificationFieldResolver,
+  ...skuSpecificationValueResolver,
+  ...assemblyOptionResolvers,
+  ...productPriceRangeResolvers,
+  ...searchBreadcrumbResolvers,
+}
+
+const getTranslatedSearchTerm = async (
+  query: SearchArgs['query'],
+  map: SearchArgs['map'],
+  ctx: Context
+) => {
+  if (!query || !map || !shouldTranslateToTenantLocale(ctx)) {
+    return query
+  }
+
+  const ftSearchIndex = map.split(',').findIndex((m) => m === 'ft')
+
+  if (ftSearchIndex === -1) {
+    return query
+  }
+
+  const queryArray = query.split('/')
+  const queryUnit = queryArray[ftSearchIndex]
+  const translated = await translateToStoreDefaultLanguage(ctx, queryUnit)
+  const queryTranslated = [
+    ...queryArray.slice(0, ftSearchIndex),
+    translated,
+    ...queryArray.slice(ftSearchIndex + 1),
+  ]
+
+  return queryTranslated.join('/')
+}
+
+const buildSpecificationFiltersAsFacets = (
+  specificationFilters: string[]
+): SelectedFacet[] => {
+  return specificationFilters.map((specificationFilter: string) => {
+    const [key, value] = specificationFilter.split(':')
+
+    return { key, value }
+  })
+}
+
+const buildCategoriesAndSubcategoriesAsFacets = (
+  categories: string
+): SelectedFacet[] => {
+  const categoriesAndSubcategories = categories.split('/')
+
+  return categoriesAndSubcategories.map((c: string) => {
+    return { key: 'c', value: c }
+  })
+}
+
+const buildSelectedFacets = (args: SearchArgs) => {
+  const selectedFacets: SelectedFacet[] = []
+
+  if (args.priceRange) {
+    selectedFacets.push({ key: 'priceRange', value: args.priceRange })
+  }
+
+  if (args.category) {
+    selectedFacets.push(
+      ...buildCategoriesAndSubcategoriesAsFacets(args.category)
+    )
+  }
+
+  if (args.collection) {
+    selectedFacets.push({ key: 'productClusterIds', value: args.collection })
+  }
+
+  if (args.specificationFilters) {
+    selectedFacets.push(
+      ...buildSpecificationFiltersAsFacets(args.specificationFilters)
+    )
+  }
+
+  return selectedFacets
+}
+
+export const queries = {
+  autocomplete: async (
+    _: any,
+    args: { maxRows: number; searchTerm?: string },
+    ctx: Context
+  ) => {
+    const {
+      clients: { search },
+    } = ctx
+
+    if (!args.searchTerm) {
+      throw new UserInputError('No search term provided')
+    }
+
+    const translatedTerm = await translateToStoreDefaultLanguage(
+      ctx,
+      args.searchTerm
+    )
+
+    const { itemsReturned } = await search.autocomplete({
+      maxRows: args.maxRows,
+      searchTerm: translatedTerm,
+    })
+
+    return {
+      cacheId: args.searchTerm,
+      itemsReturned,
+    }
+  },
+  facets: async (_: unknown, args: FacetsInput, ctx: Context) => {
+    const [shippingOptions, facets] = getShippingOptionsFromSelectedFacets(
+      args.selectedFacets
+    )
+
+    args.selectedFacets = facets
+
+    args = await getCompatibilityArgsFromSelectedFacets(ctx, args)
+
+    const { selectedFacets } = args
+
+    return fetchFacets(ctx, {
+      args,
+      selectedFacets: selectedFacets ?? [],
+      shippingOptions,
+    })
+  },
+
+  product: async (_: any, rawArgs: ProductArgs, ctx: Context) => {
+    const product = await resolveProduct(ctx, rawArgs)
+
+    if (!product) {
+      const identifier = rawArgs?.identifier || {
+        field: 'slug',
+        value: rawArgs.slug!,
+      }
+
+      throw new NotFoundError(
+        `No product was found with requested ${
+          identifier.field
+        } ${JSON.stringify({ identifier })}`
+      )
+    }
+
+    return product
+  },
+
+  products: async (_: any, args: ProductsInput, ctx: Context) => {
+    const { to } = args
+
+    if (to && to > 2500) {
+      throw new UserInputError(
+        `The maximum value allowed for the 'to' argument is 2500`
+      )
+    }
+
+    const selectedFacets: SelectedFacet[] = buildSelectedFacets(args)
+
+    const productSearchArgs = {
+      ...args,
+      fullText: args.query,
+    } as unknown as ProductSearchInput
+
+    const result = await fetchProductSearch(
+      ctx,
+      productSearchArgs,
+      selectedFacets,
+      args.shippingOptions
+    )
+
+    return result.products
+  },
+
+  productsByIdentifier: async (
+    _: any,
+    args: ProductsByIdentifierArgs,
+    ctx: Context
+  ) => {
+    const products = await resolveProductsByIdentifier(ctx, args)
+
+    if (products.length > 0) {
+      return products
+    }
+
+    throw new NotFoundError(
+      `No products were found with requested ${args.field}`
+    )
+  },
+
+  productSearch: async (_: unknown, args: ProductSearchInput, ctx: Context) => {
+    const [shippingOptions, facets] = getShippingOptionsFromSelectedFacets(
+      args.selectedFacets
+    )
+
+    args.selectedFacets = facets
+
+    args = await getCompatibilityArgsFromSelectedFacets(ctx, args)
+
+    if (!validMapAndQuery(args.query, args.map)) {
+      ctx.vtex.logger.warn({
+        message: 'Invalid map or query',
+        query: args.query,
+        map: args.map,
+      })
+    }
+
+    const { selectedFacets } = args
+
+    return fetchProductSearch(ctx, args, selectedFacets ?? [], shippingOptions)
+  },
+
+  sponsoredProducts: async (_: any, args: ProductSearchInput, ctx: any) => {
+    const [shippingOptions, facets] = getShippingOptionsFromSelectedFacets(
+      args.selectedFacets
+    )
+
+    args.selectedFacets = facets
+
+    args = await getCompatibilityArgsFromSelectedFacets(ctx, args)
+
+    if (!validMapAndQuery(args.query, args.map)) {
+      ctx.vtex.logger.warn({
+        message: 'Invalid map or query',
+        query: args.query,
+        map: args.map,
+      })
+    }
+
+    const { intelligentSearchApi } = ctx.clients
+    const { selectedFacets, fullText } = args
+
+    const biggyArgs: { [key: string]: any } = {
+      ...args,
+      query: fullText,
+      sort: convertOrderBy(args.orderBy),
+      ...args.options,
+    }
+
+    // unnecessary field. It's is an object and breaks the @vtex/api cache
+    delete biggyArgs.selectedFacets
+
+    const segment = await getOrCreateSegment(ctx)
+    const segmentData = extractSegmentData(segment)
+    const finalArgs = applyHideUnavailableItemsDefaultForDP(
+      biggyArgs,
+      segmentData.segmentParams
+    )
+
+    const result = await intelligentSearchApi.sponsoredProducts(
+      { ...finalArgs },
+      buildAttributePath(selectedFacets ?? []),
+      shippingOptions
+    )
+
+    if (ctx.vtex.tenant && !args.productOriginVtex) {
+      ctx.translated = result.translated
+    }
+
+    return result
+  },
+
+  productRecommendations: async (
+    _: any,
+    { identifier, type, groupBy }: ProductRecommendationArg,
+    ctx: Context
+  ) => {
+    if (identifier == null || type == null) {
+      throw new UserInputError('Wrong input provided')
+    }
+
+    const { shouldUseNewPDPEndpoint } = await fetchAppSettings(ctx)
+    const searchType = inputToSearchCrossSelling[type]
+    let productId = identifier.value
+
+    if (identifier.field !== 'id') {
+      const product = await queries.product(_, { identifier }, ctx)
+
+      productId = product!.productId
+    }
+
+    const groupByProduct = groupBy === CrossSellingGroupByInput.PRODUCT
+
+    if (shouldUseNewPDPEndpoint) {
+      ctx.translated = true
+    }
+
+    const products = await ctx.clients.search.crossSelling(
+      productId,
+      searchType,
+      groupByProduct,
+      shouldUseNewPDPEndpoint ? ctx.vtex.locale : undefined
+    )
+
+    searchFirstElements(products, 0, ctx.clients.search)
+    // We add a custom cacheId because these products are not exactly like the other products from search apis.
+    // Each product is basically a SKU and you may have two products in response with same ID but each one representing a SKU.
+
+    return products.map((product) => {
+      const skuId = pathOr('', ['items', '0', 'itemId'], product)
+
+      return {
+        ...product,
+        cacheId: `${product.linkText}-${skuId}`,
+      }
+    })
+  },
+
+  searchMetadata: async (_: any, args: SearchMetadataArgs, ctx: Context) => {
+    if (args.selectedFacets) {
+      const { maps, queries } = args.selectedFacets.reduce(
+        (acc, { key, value }) => {
+          if (key !== 'region-id') {
+            acc.maps.push(key)
+            acc.queries.push(value)
+          }
+
+          return acc
+        },
+        { maps: [] as string[], queries: [] as string[] }
+      )
+
+      const map = maps.join(',')
+      const query = queries.join('/')
+
+      args.map = map
+      args.query = args.query || query || undefined
+    }
+
+    const query = await getTranslatedSearchTerm(
+      args.query ?? '',
+      args.map ?? '',
+      ctx
+    )
+
+    const translatedArgs = {
+      ...args,
+      query,
+    }
+
+    const compatibilityArgs = await getCompatibilityArgs<SearchArgs>(
+      ctx,
+      translatedArgs as SearchArgs
+    )
+
+    return getSearchMetaData(_, compatibilityArgs, ctx)
+  },
+  topSearches: (_: any, __: any, ctx: Context) => {
+    return fetchTopSearches(ctx)
+  },
+  autocompleteSearchSuggestions: (
+    _: any,
+    args: { fullText: string },
+    ctx: Context
+  ) => {
+    return fetchAutocompleteSuggestions(ctx, args.fullText)
+  },
+  productSuggestions: async (
+    _: any,
+    args: SuggestionProductsArgs,
+    ctx: Context
+  ) => {
+    const selectedFacets: SelectedFacet[] =
+      args.facetKey && args.facetValue
+        ? [{ key: args.facetKey, value: args.facetValue }]
+        : []
+
+    const productSearchArgs = {
+      ...args,
+      from: 0,
+      to: args.count ? args.count - 1 : 4,
+      options: { allowRedirect: false },
+    } as unknown as ProductSearchInput
+
+    const result = await fetchProductSearch(
+      ctx,
+      productSearchArgs,
+      selectedFacets,
+      args.shippingOptions
+    )
+
+    return {
+      ...result,
+      count: result.recordsFiltered,
+    }
+  },
+  banners: (
+    _: any,
+    args: { fullText: string; selectedFacets: SelectedFacet[] },
+    ctx: Context
+  ) => {
+    return fetchBanners(ctx, args)
+  },
+  correction: (_: any, args: { fullText: string }, ctx: Context) => {
+    return fetchCorrection(ctx, args.fullText)
+  },
+  searchSuggestions: (_: any, args: { fullText: string }, ctx: Context) => {
+    return fetchSearchSuggestions(ctx, args.fullText)
+  },
+}

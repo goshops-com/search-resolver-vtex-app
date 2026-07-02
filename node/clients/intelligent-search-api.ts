@@ -1,0 +1,243 @@
+import type { InstanceOptions, IOContext } from '@vtex/api'
+import { ExternalClient } from '@vtex/api'
+
+import { parseState } from '../utils/searchState'
+import type {
+  FacetsOptions,
+  FetchBannersArgs,
+  IIntelligentSearchClient,
+  FetchProductArgs,
+  FetchProductResponse,
+  AutocompleteSuggestionsResponse,
+  CorrectionResponse,
+  FetchBannersResponse,
+  SearchSuggestionsResponse,
+  TopSearchesResponse,
+  IntschFacetsParams,
+  IntschProductSearchParams,
+  ProductSearchOptions,
+  ProductSearchResult,
+} from './intsch/types'
+import type { SearchResultArgs } from '../typings/Search'
+
+export const isPathTraversal = (str: string) => str.indexOf('..') >= 0
+
+interface CorrectionParams {
+  query: string
+}
+
+interface SearchSuggestionsParams {
+  query: string
+}
+
+interface AutocompleteSearchSuggestionsParams {
+  query: string
+}
+
+/** @deprecated Use IntschFacetsParams from clients/intsch/types (alias kept for compatibility). */
+export type FacetsArgs = IntschFacetsParams
+
+export const decodeQuery = (query: string) => {
+  try {
+    return decodeURIComponent(query)
+  } catch (e) {
+    return query
+  }
+}
+
+export class IntelligentSearchApi
+  extends ExternalClient
+  implements IIntelligentSearchClient
+{
+  private locale: string | undefined
+
+  constructor(context: IOContext, options?: InstanceOptions) {
+    super(
+      `http://${context.workspace}--${context.account}.myvtex.com/_v/api/intelligent-search`,
+      context,
+      {
+        ...options,
+        headers: {
+          ...options?.headers,
+        },
+      }
+    )
+
+    const { locale, tenant } = context
+
+    this.locale = locale ?? tenant?.locale
+  }
+
+  public async fetchTopSearches() {
+    return this.http.get('/top_searches', {
+      params: {
+        locale: this.locale,
+      },
+      metric: 'topSearches',
+    })
+  }
+
+  public async fetchCorrection(params: CorrectionParams) {
+    return this.http.get('/correction_search', {
+      params: { ...params, locale: this.locale },
+      metric: 'correction',
+    })
+  }
+
+  public async fetchSearchSuggestions(params: SearchSuggestionsParams) {
+    return this.http.get('/search_suggestions', {
+      params: { ...params, locale: this.locale },
+      metric: 'searchSuggestions',
+    })
+  }
+
+  public async fetchAutocompleteSuggestions(
+    params: AutocompleteSearchSuggestionsParams
+  ) {
+    return this.http.get('/autocomplete_suggestions', {
+      params: { ...params, locale: this.locale },
+      metric: 'autocompleteSearchSuggestions',
+    })
+  }
+
+  public async fetchBanners(params: FetchBannersArgs) {
+    if (isPathTraversal(params.path)) {
+      throw new Error('Malformed URL')
+    }
+
+    return this.http.get(`/banners/${params.path}`, {
+      params: { query: params.query, locale: this.locale },
+      metric: 'banners',
+    })
+  }
+
+  public async facets(
+    params: IntschFacetsParams,
+    path: string,
+    options?: FacetsOptions
+  ) {
+    if (isPathTraversal(path)) {
+      throw new Error('Malformed URL')
+    }
+
+    const { query, leap, searchState } = params
+    const { shippingHeader } = options ?? {}
+
+    const authToken =
+      this.context.storeUserAuthToken ?? this.context.adminUserAuthToken
+
+    return this.http.get(`/facets/${path}`, {
+      params: {
+        ...params,
+        query: query && decodeQuery(query),
+        locale: this.locale,
+        bgy_leap: leap ? true : undefined,
+        ...parseState(searchState),
+      },
+      metric: 'facets',
+      headers: {
+        'x-vtex-shipping-options': shippingHeader ?? '',
+        ...(authToken ? { VtexIdclientAutCookie: authToken } : {}), // This is required when the sales channel is private
+      },
+    })
+  }
+
+  public async productSearch(
+    params: IntschProductSearchParams,
+    path: string,
+    options?: ProductSearchOptions
+  ): Promise<ProductSearchResult> {
+    const { query, leap, searchState } = params
+    const { shippingHeader } = options ?? {}
+
+    if (isPathTraversal(path)) {
+      throw new Error('Malformed URL')
+    }
+
+    const authToken =
+      this.context.storeUserAuthToken ?? this.context.adminUserAuthToken
+
+    const requestPath = `/product_search/${path}`
+    const requestParams = {
+      query: query && decodeQuery(query),
+      locale: this.locale,
+      bgy_leap: leap ? true : undefined,
+      ...parseState(searchState),
+      ...params,
+    }
+
+    const requestHeaders: Record<string, string | string[]> = {
+      'x-vtex-shipping-options': shippingHeader ?? '',
+    }
+
+    const data = await this.http.get(requestPath, {
+      params: requestParams,
+      metric: 'product-search',
+      headers: {
+        ...requestHeaders,
+        ...(authToken ? { VtexIdclientAutCookie: authToken } : {}), // This is required when the sales channel is private
+      },
+    })
+
+    return {
+      ...data,
+      requestInfo: {
+        path: requestPath,
+        params: requestParams,
+        headers: requestHeaders,
+      },
+    }
+  }
+
+  public async sponsoredProducts(
+    params: SearchResultArgs,
+    path: string,
+    shippingHeader?: string[]
+  ) {
+    const { query, leap, searchState } = params
+
+    if (isPathTraversal(path)) {
+      throw new Error('Malformed URL')
+    }
+
+    return this.http.get(`/sponsored_products/${path}`, {
+      params: {
+        query: query && decodeQuery(query),
+        locale: this.locale,
+        bgy_leap: leap ? true : undefined,
+        ...parseState(searchState),
+        ...params,
+      },
+      metric: 'product-search',
+      headers: {
+        'x-vtex-shipping-options': shippingHeader ?? '',
+      },
+    })
+  }
+
+  public async fetchAutocompleteSuggestionsV1(): Promise<AutocompleteSuggestionsResponse> {
+    throw new Error('Method not implemented.')
+  }
+
+  public async fetchTopSearchesV1(): Promise<TopSearchesResponse> {
+    throw new Error('Method not implemented.')
+  }
+
+  public async fetchSearchSuggestionsV1(): Promise<SearchSuggestionsResponse> {
+    throw new Error('Method not implemented.')
+  }
+
+  public async fetchCorrectionV1(): Promise<CorrectionResponse> {
+    throw new Error('Method not implemented.')
+  }
+
+  public async fetchBannersV1(): Promise<FetchBannersResponse> {
+    throw new Error('Method not implemented.')
+  }
+
+  public async fetchProduct(
+    _: FetchProductArgs
+  ): Promise<FetchProductResponse> {
+    throw new Error('Method not implemented.')
+  }
+}

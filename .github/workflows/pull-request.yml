@@ -1,0 +1,46 @@
+# managed-by: golden-path v1
+name: PR actions
+permissions:
+  contents: read
+'on':
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+jobs:
+  io-app-test:
+    name: IO app test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+        env:
+          RUNNER_TEMP: /tmp
+      - name: Run test on every builder directory
+        uses: vtex/action-io-app-test@v1.0.1
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+        env:
+          RUNNER_TEMP: /tmp
+      - name: Lint project
+        uses: vtex/action-lint@v1.1.1
+  Cypress:
+    uses: vtex/action-io-app-cypress/.github/workflows/cypress.yml@v1
+    with:
+      accounts: '["biggy"]'
+      tests-repository: vtex/search-tests
+      containers: 4
+      parallel: true
+    secrets:
+      app-key: ${{ secrets.APP_KEY }}
+      app-token: ${{ secrets.APP_TOKEN }}
+      record-key: ${{ secrets.RECORD_KEY }}
