@@ -5,7 +5,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@gocommerce/utils": "^0.6.11",
+    "@gocommerce/utils": "^0.7.3",
     "camelcase": "^5.0.0",
     "co-body": "^6.2.0",
     "cookie": "^0.3.1",

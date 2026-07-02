@@ -313,10 +313,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@gocommerce/utils@^0.6.11":
-  version "0.6.11"
-  resolved "https://registry.yarnpkg.com/@gocommerce/utils/-/utils-0.6.11.tgz#8a340dd74a73fe8d8fdae963e9d8f1f0315409f4"
-  integrity sha512-4t8uqIPv5Oap4OW+EeWuh18m4ZAScyBiNUT8Elha4joYMYlmIjp8p+J11nsDxVSSHTrp/k34EGCfDiHjT81snA==
+"@gocommerce/utils@^0.7.3":
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/@gocommerce/utils/-/utils-0.7.3.tgz#e1c43025d4d08d0a947fb6d3cc7e4e8a0fe097ca"
+  integrity sha512-cSrl0QzTWIvgweq6h73KFS7q9+95VUwfK1VeZ/PuOFdUrohKjRjUD9AYTtcCMgZvigvQr/X6xL2pWwBoKRwgWQ==
   dependencies:
     axios "0.18.0"
     babel-runtime "^6.26.0"
@@ -4356,20 +4356,10 @@ uuid@^11.1.0:
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-11.1.0.tgz#9549028be1753bb934fc96e2bca09bb4105ae912"
   integrity sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==
 
-uuid@^3.1.0:
-  version "3.3.2"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.3.2.tgz#1b4af4955eb3077c501c23872fc6513811587131"
-  integrity sha512-yXJmeNaw3DnnKAOKJE51sL/ZaYfWJRl1pK9dr19YFCu0ObS231AB1/LbqTKRAQ5kw8A90rA6fr4riOUpTZvQZA==
-
-uuid@^3.2.1:
+uuid@^3.1.0, uuid@^3.2.1, uuid@^3.3.3:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.4.0.tgz#b23e4358afa8a202fe7a100af1f5f883f02007ee"
   integrity sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
-
-uuid@^3.3.3:
-  version "3.3.3"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.3.3.tgz#4568f0216e78760ee1dbf3a4d2cf53e224112866"
-  integrity sha512-pW0No1RGHgzlpHJO1nsVrHKpOEIxkGg1xB+v0ZmdNH5OAeAwzAVrCnI2/6Mtx+Uys6iaylxa+D3g4j63IKKjSQ==
 
 v8-to-istanbul@^9.0.1:
   version "9.3.0"
