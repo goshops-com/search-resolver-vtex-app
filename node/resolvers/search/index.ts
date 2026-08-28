@@ -90,6 +90,29 @@ const isLegacySearchFormat = ({
   return map.split(MAP_VALUES_SEP).length === query.split(PATH_SEPARATOR).length
 }
 
+// Extracts the free-text term from a `query`/`map` pair when the request is a
+// text search (map contains an `ft` segment). Category navigation (no `ft`)
+// returns undefined so the request keeps taking the catalog path.
+const getFullTextFromMap = (query?: string, map?: string) => {
+  if (!query || !map) {
+    return undefined
+  }
+
+  const ftIndex = map.split(MAP_VALUES_SEP).findIndex((m) => m === 'ft')
+
+  if (ftIndex === -1) {
+    return undefined
+  }
+
+  return query.split(PATH_SEPARATOR)[ftIndex] || undefined
+}
+
+// The storefront PLP sends the search term as a selectedFacet with key `ft`
+// (e.g. `[{ key: 'ft', value: 'laptop' }]`) and leaves `query`/`map` empty, so
+// the free-text term must also be recovered from there to route to GoPersonal.
+const getFullTextFromSelectedFacets = (selectedFacets?: SelectedFacet[]) =>
+  selectedFacets?.find((facet) => facet.key === 'ft')?.value || undefined
+
 export const getCompatibilityArgs = async <T extends QueryArgs>(
   ctx: Context,
   args: T
@@ -369,6 +392,12 @@ export const queries = {
 
     const { selectedFacets } = args
 
+    if (!args.fullText) {
+      args.fullText =
+        getFullTextFromMap(args.query, args.map) ??
+        getFullTextFromSelectedFacets(selectedFacets)
+    }
+
     return fetchFacets(ctx, {
       args,
       selectedFacets: selectedFacets ?? [],
@@ -409,6 +438,7 @@ export const queries = {
     const productSearchArgs = {
       ...args,
       fullText: args.query,
+      __caller: 'query.products',
     } as unknown as ProductSearchInput
 
     const result = await fetchProductSearch(
@@ -455,6 +485,12 @@ export const queries = {
     }
 
     const { selectedFacets } = args
+
+    if (!args.fullText) {
+      args.fullText =
+        getFullTextFromMap(args.query, args.map) ??
+        getFullTextFromSelectedFacets(selectedFacets)
+    }
 
     return fetchProductSearch(ctx, args, selectedFacets ?? [], shippingOptions)
   },
@@ -619,6 +655,7 @@ export const queries = {
       from: 0,
       to: args.count ? args.count - 1 : 4,
       options: { allowRedirect: false },
+      __caller: 'query.productSuggestions',
     } as unknown as ProductSearchInput
 
     const result = await fetchProductSearch(
