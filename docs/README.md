@@ -1,4 +1,7 @@
-# VTEX GraphQL Resolver
+# VTEX IO Docs
 
-This app is an implementation of the VTEX search protocol that wraps the VTEX catalog searches related API calls.
-This protocol is defined by the schema graphQL located here: https://github.com/vtex-apps/search-graphql
+Focused guides used during development of this app.
+
+- Agent Operations & Constraints: ./agent-operations.md
+- MCP GitHub Search Guide (examples): ./mcp-github-search-guide.md
+- My Account customization: ./MyAccount.md

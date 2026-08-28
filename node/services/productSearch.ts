@@ -18,8 +18,21 @@ import type {
 import type {
   IntschProductSearchParams,
   ProductSearchRequestInfo,
+  ProductSearchResponse,
 } from '../clients/intsch/types'
+import type { FacetSettings } from './settings'
 import { fetchAppSettings } from './settings'
+import {
+  buildFacetsFromProducts,
+  filterProductsBySelectedFacets,
+} from './gopersonalLocalFacets'
+import { fetchGoPersonalRankedIds } from './gopersonalSearch'
+import { hydrateProductsFromCatalog } from './gopersonalCatalog'
+import {
+  extractSpecificationFieldIds,
+  fetchFilterableFieldIds,
+} from './specificationFilters'
+import { getGoPersonalSession } from './gopersonalSession'
 
 type SegmentData = ReturnType<typeof extractSegmentData>
 
@@ -465,6 +478,79 @@ async function fetchProductSearchFromIntsch(
   }
 }
 
+type GoPersonalSettings = {
+  gopersonalProjectId: string
+  gopersonalLimit: number
+  facets: FacetSettings
+}
+
+/**
+ * Fetches product search results using the GoPersonal Search backend.
+ *
+ * GoPersonal is used purely as a relevance engine: it ranks ids and the catalog
+ * supplies the data. Because the whole ranked set is hydrated, faceting,
+ * filtering and pagination are resolved locally, which keeps facet counts
+ * describing every result instead of the visible page and avoids depending on
+ * the project's filterable-attribute configuration.
+ *
+ * Session identifiers (customer/session) are read from HTTP headers set by the
+ * storefront; when absent the request is made as an anonymous search.
+ */
+// eslint-disable-next-line max-params
+async function fetchProductSearchFromGoPersonal(
+  ctx: Context,
+  args: ProductSearchInput,
+  selectedFacets: SelectedFacet[],
+  settings: GoPersonalSettings
+): Promise<ProductSearchResponse & { searchState?: string; facets?: Facet[] }> {
+  const { productIds, searchId } = await fetchGoPersonalRankedIds(ctx, {
+    project_id: settings.gopersonalProjectId,
+    query: args.fullText,
+    limit: settings.gopersonalLimit,
+    ...getGoPersonalSession(ctx),
+  })
+
+  // GoPersonal only ranks; the catalog is the source of truth for price,
+  // stock, sellers and SKUs, so the ranked ids are hydrated into real catalog
+  // products and re-sorted back into GoPersonal's ranking.
+  const ranked = await hydrateProductsFromCatalog(
+    ctx,
+    productIds,
+    args.salesChannel
+  )
+
+  const filterableFieldIds = await fetchFilterableFieldIds(
+    ctx,
+    extractSpecificationFieldIds(ranked)
+  )
+
+  // Facets describe the unfiltered result set so every value stays selectable
+  // after the shopper picks one.
+  const facets = buildFacetsFromProducts(
+    ranked,
+    settings.facets,
+    selectedFacets,
+    filterableFieldIds
+  )
+
+  const filtered = filterProductsBySelectedFacets(
+    ranked,
+    selectedFacets,
+    filterableFieldIds
+  )
+
+  const from = args.from ?? 0
+  const to = args.to ?? from + filtered.length - 1
+
+  return {
+    searchState: args.searchState,
+    products: filtered.slice(from, to + 1),
+    recordsFiltered: filtered.length,
+    searchId,
+    facets,
+  }
+}
+
 function logSponsoredProducts(ctx: Context, result: any) {
   const products = result?.products
 
@@ -491,7 +577,24 @@ export async function fetchProductSearch(
   selectedFacets: SelectedFacet[],
   shippingOptions?: string[]
 ) {
-  const { shouldUseNewPLPEndpoint } = await fetchAppSettings(ctx)
+  const {
+    shouldUseNewPLPEndpoint,
+    searchEngine,
+    gopersonalProjectId,
+    gopersonalLimit,
+    facets,
+  } = await fetchAppSettings(ctx)
+
+  const hasFullTextQuery = Boolean(args.fullText?.trim())
+
+  if (hasFullTextQuery && searchEngine === 'gopersonal') {
+    return fetchProductSearchFromGoPersonal(ctx, args, selectedFacets, {
+      gopersonalProjectId,
+      gopersonalLimit,
+      facets,
+    })
+  }
+
   const segment = await getOrCreateSegment(ctx)
   const segmentData = extractSegmentData(segment)
 

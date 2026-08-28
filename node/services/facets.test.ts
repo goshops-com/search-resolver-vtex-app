@@ -16,10 +16,11 @@ describe('fetchFacets service', () => {
     translated: false,
   }
 
+  // Facets only reach intsch on catalog navigation; a full text query is
+  // answered by GoPersonal so the filters match the products it ranked.
   const mockArgs: FacetsInput = {
-    fullText: 'test query',
-    query: 'test',
-    map: 'ft',
+    query: 'electronics',
+    map: 'c',
     selectedFacets: [],
     removeHiddenFacets: false,
     hideUnavailableItems: false,
@@ -93,10 +94,68 @@ describe('fetchFacets service', () => {
     })
 
     expect(ctx.clients.intsch.facets).toHaveBeenCalledWith(
-      expect.objectContaining({ query: 'test query' }),
+      expect.any(Object),
       expect.any(String),
       expect.objectContaining({ shippingHeader: shippingOptions })
     )
+  })
+
+  it('builds facets from the catalog when there is a full text query', async () => {
+    const ctx = createContext({
+      accountName: 'testaccount',
+      appSettings: { gopersonalProjectId: 'proj-1' },
+      gopersonalSettings: {
+        search: {
+          hits: [],
+          product_ids: ['1', '2'],
+          total_results: 2,
+          search_id: 'facets-search',
+        },
+      },
+      catalogProducts: [
+        {
+          productId: '1',
+          brand: 'HP',
+          categories: ['/Computo/Laptops/'],
+        },
+        {
+          productId: '2',
+          brand: 'HP',
+          categories: ['/Computo/Monitores/'],
+        },
+      ],
+    })
+
+    const result: any = await fetchFacets(ctx, {
+      args: { ...mockArgs, fullText: 'laptop' },
+      selectedFacets: mockSelectedFacets,
+    })
+
+    expect(ctx.clients.gopersonal.search).toHaveBeenCalledWith(
+      expect.objectContaining({ project_id: 'proj-1', query: 'laptop' })
+    )
+    expect(ctx.clients.intsch.facets).not.toHaveBeenCalled()
+    expect(result.recordsFiltered).toBe(2)
+
+    const brandFacet = result.facets.find(
+      (facet: any) => facet.values[0]?.key === 'brand'
+    )
+
+    expect(brandFacet.values[0]).toMatchObject({ value: 'hp', quantity: 2 })
+
+    expect(
+      result.facets.find((facet: any) => facet.values[0]?.key === 'category-1')
+    ).toBeUndefined()
+
+    const categoryFacet = result.facets.find(
+      (facet: any) => facet.values[0]?.key === 'category-2'
+    )
+
+    expect(categoryFacet.type).toBe('TEXT')
+    expect(categoryFacet.values.map((v: any) => v.value).sort()).toEqual([
+      'laptops',
+      'monitores',
+    ])
   })
 
   it('should set translated flag in context when tenant is present', async () => {

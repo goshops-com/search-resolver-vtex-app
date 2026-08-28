@@ -23,6 +23,8 @@ enum SimulationBehavior {
   DEFAULT = 'default',
 }
 
+const ONE_DAY_S = 24 * 60 * 60
+
 const inflightKey = ({ baseURL, url, params, headers }: RequestConfig) => {
   return (
     (baseURL ?? '') +
@@ -325,6 +327,14 @@ export class Search extends AppClient {
         metric: 'search-listTreeByCategoryId',
       }
     )
+
+  public specificationField = (fieldId: string) =>
+    this.get<SpecificationField>(`/pub/specification/fieldGet/${fieldId}`, {
+      metric: 'search-specificationFieldGet',
+      // The endpoint answers without cache headers, but a specification's
+      // definition only changes when the catalog is reconfigured.
+      forceMaxAge: ONE_DAY_S,
+    })
 
   public autocomplete = ({ maxRows, searchTerm }: AutocompleteArgs) =>
     this.get<{ itemsReturned: SearchAutocompleteUnit[] }>(

@@ -1,5 +1,5 @@
 # managed-by: golden-path v1
-APP_NAME := search-resolver
+APP_NAME := gopersonal-search-resolver
 PKG_MGR ?= yarn
 VTEX_SETUP ?= vtex setup
 VTEX_LINK ?= vtex link

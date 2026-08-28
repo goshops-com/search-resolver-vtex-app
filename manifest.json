@@ -1,13 +1,12 @@
 {
-  "vendor": "vtex",
-  "name": "search-resolver",
+  "vendor": "qacoolboxpe",
+  "name": "gopersonal-search-resolver",
   "version": "1.104.0",
-  "title": "GraphQL resolver for the VTEX store APIs",
-  "description": "GraphQL resolvers for the VTEX API for the catalog and orders.",
+  "title": "GoPersonal Search Resolver",
+  "description": "GraphQL resolvers for the VTEX search schema, with product search and facets powered by the GoPersonal search engine.",
   "credentialType": "absolute",
   "builders": {
-    "node": "7.x",
-    "docs": "0.x"
+    "node": "7.x"
   },
   "dependencies": {
     "vtex.messages": "1.x",
@@ -21,20 +20,74 @@
     "title": "Intelligent Search Resolver",
     "type": "object",
     "properties": {
-      "slugifyLinks": {
-        "title": "Set to slugify links. Uses default catalog slug instead",
+      "useGoPersonalSearch": {
+        "title": "Use GoPersonal as the search engine",
+        "description": "When unchecked, full-text queries are answered by VTEX Intelligent Search. Falls back to VTEX automatically when no GoPersonal project id is set.",
         "type": "boolean",
-        "default": false
+        "default": true
       },
-      "shouldUseNewPDPEndpoint": {
-        "title": "Feature flag to use the new PDP endpoint",
-        "type": "boolean",
-        "default": false
+      "gopersonalProjectId": {
+        "title": "GoPersonal project id",
+        "type": "string",
+        "default": ""
       },
-      "shouldUseNewPLPEndpoint": {
-        "title": "Feature flag to use the new PLP endpoint",
-        "type": "boolean",
-        "default": false
+      "facetsLocale": {
+        "title": "Filter sorting locale",
+        "description": "Locale used to sort filter names alphabetically, so accented letters land where the store's language expects them. Example: es, pt, en.",
+        "type": "string",
+        "default": "es"
+      },
+      "brandGroupName": {
+        "title": "Brand filter title",
+        "description": "Title shown above the brand filter. Product specifications with this same name are dropped, since they duplicate the brand the product already carries.",
+        "type": "string",
+        "default": "Marca"
+      },
+      "priceGroupName": {
+        "title": "Price filter title",
+        "description": "Title shown above the price range filter.",
+        "type": "string",
+        "default": "Precio"
+      },
+      "categoryLevelNames": {
+        "title": "Category filter titles, by level",
+        "description": "One title per category tree level, from the broadest to the deepest. Levels beyond the last one reuse the third name followed by their depth.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "Departamento",
+          "Categoría",
+          "Sub-Categoría"
+        ]
+      },
+      "firstOfferedCategoryDepth": {
+        "title": "First category level offered as a filter",
+        "description": "Category levels shallower than this are not offered as filters. Set it to 2 to hide the top level when shoppers already reached the page through it.",
+        "type": "number",
+        "default": 2
+      },
+      "leadingGroupNames": {
+        "title": "Filter order",
+        "description": "Filter titles shown first, in this order. Every other filter follows them sorted alphabetically.",
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [
+          "Marca",
+          "Categoría",
+          "Sub-Categoría",
+          "Precio",
+          "Color"
+        ]
+      },
+      "unpricedPlaceholder": {
+        "title": "Placeholder price to exclude",
+        "description": "Price the catalog stores for products that were never actually priced. Products at this exact price are left out of the price range filter, so a single one does not stretch the slider. Set it to 0 if the catalog has no such placeholder.",
+        "type": "number",
+        "default": 9999999
       }
     }
   },
@@ -86,6 +139,13 @@
       "attrs": {
         "host": "portal.vtexcommercebeta.com.br",
         "path": "/api/intelligent-search"
+      }
+    },
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "search.gopersonal.ai",
+        "path": "/*"
       }
     },
     {

@@ -6,6 +6,13 @@ interface FilterListTreeCategoryById {
   IsStockKeepingUnit: boolean
 }
 
+interface SpecificationField {
+  Name: string
+  FieldId: number
+  IsActive: boolean
+  IsFilter: boolean
+}
+
 interface FacetValuesArgs {
   from: number
   to: number
