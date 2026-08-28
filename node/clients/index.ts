@@ -5,6 +5,7 @@ import { Checkout } from './checkout'
 import { Rewriter } from './rewriter'
 import { IntelligentSearchApi } from './intelligent-search-api'
 import { Intsch } from './intsch'
+import { GoPersonal } from './gopersonal'
 
 export class Clients extends IOClients {
   public get search() {
@@ -25,5 +26,9 @@ export class Clients extends IOClients {
 
   public get intsch() {
     return this.getOrSet('intsch', Intsch)
+  }
+
+  public get gopersonal() {
+    return this.getOrSet('gopersonal', GoPersonal)
   }
 }

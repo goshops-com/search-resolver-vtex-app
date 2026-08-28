@@ -8,6 +8,10 @@ export function createContext<Ctx = Context>({
   accountName,
   intelligentSearchApiSettings,
   intschSettings,
+  gopersonalSettings,
+  catalogProducts,
+  specificationFields,
+  headers,
   cookies,
   body,
   req,
@@ -22,6 +26,12 @@ export function createContext<Ctx = Context>({
   appSettings?: Record<string, any>
   intschSettings?: IntelligentSearchClientArgs
   intelligentSearchApiSettings?: IntelligentSearchClientArgs
+  gopersonalSettings?: {
+    search?: any
+  }
+  catalogProducts?: any[]
+  specificationFields?: Record<string, Partial<SpecificationField>>
+  headers?: Record<string, string>
   req?: {
     body?: any
   }
@@ -45,7 +55,13 @@ export function createContext<Ctx = Context>({
     cookies: {
       get: jest.fn().mockImplementation((key: string) => cookies?.[key]),
     },
-    get: jest.fn().mockReturnValue('localhost'),
+    get: jest.fn().mockImplementation((key: string) => {
+      if (headers && key in headers) {
+        return headers[key]
+      }
+
+      return key.toLowerCase() === 'host' ? 'localhost' : undefined
+    }),
     response: {
       set: jest.fn(),
     },
@@ -54,6 +70,33 @@ export function createContext<Ctx = Context>({
       intelligentSearchApi: new MockedIntschClient(
         intelligentSearchApiSettings
       ),
+      gopersonal: {
+        search: jest
+          .fn()
+          .mockResolvedValue(
+            gopersonalSettings?.search ?? { hits: [], product_ids: [] }
+          ),
+      },
+      search: {
+        // Mirrors the catalog: answers only the ids it knows, in its own order.
+        productsById: jest.fn().mockImplementation((ids: string[]) =>
+          Promise.resolve(
+            (catalogProducts ?? []).filter((product) =>
+              ids.includes(String(product.productId))
+            )
+          )
+        ),
+        specificationField: jest.fn().mockImplementation((fieldId: string) =>
+          Promise.resolve(
+            specificationFields?.[fieldId] ?? {
+              Name: `spec-${fieldId}`,
+              FieldId: Number(fieldId),
+              IsActive: true,
+              IsFilter: true,
+            }
+          )
+        ),
+      },
       apps: {
         getAppSettings: jest.fn().mockReturnValue(appSettings ?? {}),
       },

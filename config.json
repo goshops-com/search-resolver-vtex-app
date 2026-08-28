@@ -1,0 +1,6 @@
+{
+  "gopersonal": {
+    "baseUrl": "https://search.gopersonal.ai",
+    "limit": 200
+  }
+}
