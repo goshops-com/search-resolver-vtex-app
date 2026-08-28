@@ -1,5 +1,5 @@
 {
-  "name": "vtex.search-resolver",
+  "name": "qacoolboxpe.gopersonal-search-resolver",
   "scripts": {
     "lint": "tsc --noEmit --pretty",
     "test": "jest"

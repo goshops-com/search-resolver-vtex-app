@@ -60,3 +60,5 @@ jsconfig.json
 # This repo intentionally does not host `.specify/` locally.
 .claude/
 .specify/
+agents.md
+./docs

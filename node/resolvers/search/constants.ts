@@ -15,4 +15,5 @@ export const FILTER_TITLE_SEP = '_'
 export const CATEGORY_SEGMENT = 'c'
 export const FULL_TEXT_SEGMENT = 'ft'
 
-export const APP_NAME = 'vtex.search-resolver@1.x'
+export const APP_NAME =
+  process.env.VTEX_APP_ID ?? 'qacoolboxpe.gopersonal-search-resolver@1.x'

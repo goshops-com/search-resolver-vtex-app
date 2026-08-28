@@ -13,3 +13,6 @@ node/**/*.test.ts
 node/**/*.test.tsx
 node/coverage/*
 node/mocks/
+agents.md
+.calvin/
+docs/

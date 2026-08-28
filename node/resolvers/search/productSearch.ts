@@ -4,6 +4,8 @@ import { Functions } from '@gocommerce/utils'
 import { zipQueryAndMap, breadcrumbMapKey, logDegradedSearchError } from './utils'
 import { shouldTranslateToBinding } from '../../utils/i18n'
 
+//Test
+
 interface ProductSearchParent {
   productsRaw: IOResponse<SearchProduct[]>
   translatedArgs: SearchArgs
