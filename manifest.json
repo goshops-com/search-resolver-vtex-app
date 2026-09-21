@@ -29,7 +29,7 @@
       "gopersonalProjectId": {
         "title": "GoPersonal project id",
         "type": "string",
-        "default": ""
+        "default": "6a91a8f3a5da3cc7150a4c03"
       },
       "facetsLocale": {
         "title": "Filter sorting locale",

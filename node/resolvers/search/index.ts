@@ -468,6 +468,10 @@ export const queries = {
   },
 
   productSearch: async (_: unknown, args: ProductSearchInput, ctx: Context) => {
+    console.log('TESTTT ":"', _);
+    console.log('TEST "args":', args);
+    console.log('TEST "ctx":', ctx);
+
     const [shippingOptions, facets] = getShippingOptionsFromSelectedFacets(
       args.selectedFacets
     )

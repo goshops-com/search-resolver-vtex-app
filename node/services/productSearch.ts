@@ -510,6 +510,7 @@ async function fetchProductSearchFromGoPersonal(
     ...getGoPersonalSession(ctx),
   })
 
+  console.log("TEST args.salesChannel:", args.salesChannel);
   // GoPersonal only ranks; the catalog is the source of truth for price,
   // stock, sellers and SKUs, so the ranked ids are hydrated into real catalog
   // products and re-sorted back into GoPersonal's ranking.
@@ -586,8 +587,10 @@ export async function fetchProductSearch(
   } = await fetchAppSettings(ctx)
 
   const hasFullTextQuery = Boolean(args.fullText?.trim())
-
+  console.log("TESTTT hasFullTextQuery:", hasFullTextQuery);
+  console.log("TESTTT searchEngine:", searchEngine);
   if (hasFullTextQuery && searchEngine === 'gopersonal') {
+    console.log("TESTTT fetchProductSearchFromGoPersonal");
     return fetchProductSearchFromGoPersonal(ctx, args, selectedFacets, {
       gopersonalProjectId,
       gopersonalLimit,
