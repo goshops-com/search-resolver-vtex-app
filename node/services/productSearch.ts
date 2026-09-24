@@ -24,6 +24,7 @@ import type { FacetSettings } from './settings'
 import { fetchAppSettings } from './settings'
 import {
   buildFacetsFromProducts,
+  explainFacetExclusions,
   filterProductsBySelectedFacets,
 } from './gopersonalLocalFacets'
 import { debugLog } from './debugLog'
@@ -548,6 +549,18 @@ async function fetchProductSearchFromGoPersonal(
     afterFilter: filtered.length,
     selectedFacets,
   })
+
+  if (filtered.length !== ranked.length) {
+    debugLog(ctx, 'gopersonal: descartados', {
+      fullText: args.fullText,
+      selectedFacets,
+      excluded: explainFacetExclusions(
+        ranked,
+        selectedFacets,
+        filterableFieldIds
+      ),
+    })
+  }
 
   const from = args.from ?? 0
   const to = args.to ?? from + filtered.length - 1
