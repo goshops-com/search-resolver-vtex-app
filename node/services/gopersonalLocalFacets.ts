@@ -8,15 +8,24 @@ const PRICE_KEY = 'priceRange'
 const PRICE_RANGE_SEPARATOR = ' TO '
 
 /**
- * VTEX names the brand facet `b` in `map`, while the facets built here are
- * keyed `brand`. Searching from the input arrives as `query=jbl/jbl&map=ft,b`,
- * so without this equivalence the brand filter matched no product and every
- * result was dropped.
+ * VTEX abbreviates the two native facets inside `map`: `b` for brand and `c`
+ * for category, which is what `getCompatibilityArgs` rewrites `brand` and
+ * `category-N` into. The facets built here keep the long keys, so without this
+ * equivalence those filters matched no product and emptied the result set.
+ *
+ * `c` carries no depth, so it stands for "any level of the category tree"
+ * rather than for a particular `category-N`.
  */
 const BRAND_KEY_ALIASES = new Set([BRAND_KEY, 'b'])
+const CATEGORY_ANY_KEY = 'categoryAnyDepth'
+const CATEGORY_ANY_ALIASES = new Set(['c'])
 
 function normalizeFacetKey(key: string): string {
-  return BRAND_KEY_ALIASES.has(key) ? BRAND_KEY : key
+  if (BRAND_KEY_ALIASES.has(key)) {
+    return BRAND_KEY
+  }
+
+  return CATEGORY_ANY_ALIASES.has(key) ? CATEGORY_ANY_KEY : key
 }
 
 type FacetValueAccumulator = {
@@ -386,6 +395,12 @@ function productValuesForKey(
     return product.brand ? [searchSlugify(product.brand)] : []
   }
 
+  if (key === CATEGORY_ANY_KEY) {
+    return (product.categories ?? []).flatMap((path) =>
+      path.split('/').filter(Boolean).map(searchSlugify)
+    )
+  }
+
   if (key.startsWith(CATEGORY_KEY_PREFIX)) {
     const depth = Number(key.slice(CATEGORY_KEY_PREFIX.length))
 
@@ -416,6 +431,33 @@ function productValuesForKey(
   )
 }
 
+function groupSelectedFacets(
+  selectedFacets: SelectedFacet[]
+): Record<string, string[]> {
+  return selectedFacets.reduce((acc, { key, value }) => {
+    if (key !== 'ft') {
+      ;(acc[normalizeFacetKey(key)] ??= []).push(value)
+    }
+
+    return acc
+  }, {} as Record<string, string[]>)
+}
+
+function matchesFilter(
+  product: SearchProduct,
+  key: string,
+  values: string[],
+  filterableFieldIds?: Set<string>
+): boolean {
+  if (key === PRICE_KEY) {
+    return matchesPriceRange(product, values)
+  }
+
+  const productValues = productValuesForKey(product, key, filterableFieldIds)
+
+  return values.some((value) => productValues.includes(searchSlugify(value)))
+}
+
 /**
  * Filters the ranked products in place of GoPersonal.
  *
@@ -428,14 +470,7 @@ export function filterProductsBySelectedFacets(
   selectedFacets: SelectedFacet[] = [],
   filterableFieldIds?: Set<string>
 ): SearchProduct[] {
-  const filters = selectedFacets.reduce((acc, { key, value }) => {
-    if (key !== 'ft') {
-      ;(acc[normalizeFacetKey(key)] ??= []).push(value)
-    }
-
-    return acc
-  }, {} as Record<string, string[]>)
-
+  const filters = groupSelectedFacets(selectedFacets)
   const keys = Object.keys(filters)
 
   if (keys.length === 0) {
@@ -443,20 +478,58 @@ export function filterProductsBySelectedFacets(
   }
 
   return products.filter((product) =>
-    keys.every((key) => {
-      const values = filters[key]
-
-      if (key === PRICE_KEY) {
-        return matchesPriceRange(product, values)
-      }
-
-      const productValues = productValuesForKey(
-        product,
-        key,
-        filterableFieldIds
-      )
-
-      return values.some((value) => productValues.includes(searchSlugify(value)))
-    })
+    keys.every((key) =>
+      matchesFilter(product, key, filters[key], filterableFieldIds)
+    )
   )
+}
+
+export type FacetExclusion = {
+  productId: string
+  productName: string
+  key: string
+  requested: string[]
+  actual: string[]
+  reason: 'sin-dato' | 'valor-distinto'
+}
+
+/**
+ * Explains, per excluded product, which filter rejected it and why.
+ *
+ * Temporary instrumentation for the investigation into the drop from ranked to
+ * filtered results; remove along with `services/debugLog.ts`.
+ */
+export function explainFacetExclusions(
+  products: SearchProduct[],
+  selectedFacets: SelectedFacet[] = [],
+  filterableFieldIds?: Set<string>
+): FacetExclusion[] {
+  const filters = groupSelectedFacets(selectedFacets)
+  const keys = Object.keys(filters)
+
+  return products.reduce<FacetExclusion[]>((acc, product) => {
+    const failing = keys.find(
+      (key) => !matchesFilter(product, key, filters[key], filterableFieldIds)
+    )
+
+    if (!failing) {
+      return acc
+    }
+
+    const actual =
+      failing === PRICE_KEY
+        ? [String(getProductPrice(product))]
+        : productValuesForKey(product, failing, filterableFieldIds)
+
+    acc.push({
+      productId: String(product.productId),
+      productName: product.productName,
+      key: failing,
+      requested: filters[failing],
+      actual,
+      reason: actual.length === 0 ? 'sin-dato' : 'valor-distinto',
+    })
+
+    return acc
+  }, [])
 }

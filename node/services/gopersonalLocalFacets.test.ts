@@ -327,6 +327,34 @@ describe('filterProductsBySelectedFacets', () => {
     ).toEqual([])
   })
 
+  it('matches any depth of the tree when VTEX sends the category as `c`', () => {
+    // `c` carries no depth, unlike `category-N`, so it has to be checked
+    // against every level or it matches nothing and empties the result set.
+    const audio = product({
+      productId: '20',
+      categories: ['/Audio/Audifonos/On Ear/'],
+    })
+
+    expect(
+      filterProductsBySelectedFacets([audio], [{ key: 'c', value: 'audifonos' }])
+    ).toEqual([audio])
+
+    expect(
+      filterProductsBySelectedFacets([audio], [{ key: 'c', value: 'on-ear' }])
+    ).toEqual([audio])
+  })
+
+  it('still excludes products outside the tree selected as `c`', () => {
+    const audio = product({
+      productId: '21',
+      categories: ['/Audio/Audifonos/'],
+    })
+
+    expect(
+      filterProductsBySelectedFacets([audio], [{ key: 'c', value: 'laptops' }])
+    ).toEqual([])
+  })
+
   it('preserves the incoming ranking', () => {
     const result = filterProductsBySelectedFacets(
       [acer, hp, dell],
