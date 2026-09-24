@@ -261,6 +261,29 @@ describe('buildFacetsFromProducts', () => {
     expect((brand.values.find((v: any) => v.value === 'hp') as any).selected).toBe(true)
     expect((brand.values.find((v: any) => v.value === 'dell') as any).selected).toBe(false)
   })
+
+  it('marks the brand selected when VTEX sends it as `b`', () => {
+    const facets = buildFacets(
+      [product({ productId: '1', brand: 'JBL' }), product({ productId: '2', brand: 'Dell' })],
+      [{ key: 'b', value: 'jbl' }]
+    )
+
+    const brand = findByKey(facets, 'brand')!
+
+    expect((brand.values.find((v: any) => v.value === 'jbl') as any).selected).toBe(true)
+    expect((brand.values.find((v: any) => v.value === 'dell') as any).selected).toBe(false)
+  })
+
+  it('marks the brand selected when the value is not slugified', () => {
+    const facets = buildFacets(
+      [product({ productId: '1', brand: 'JBL' })],
+      [{ key: 'b', value: 'JBL' }]
+    )
+
+    const brand = findByKey(facets, 'brand')!
+
+    expect((brand.values.find((v: any) => v.value === 'jbl') as any).selected).toBe(true)
+  })
 })
 
 describe('filterProductsBySelectedFacets', () => {
@@ -276,6 +299,32 @@ describe('filterProductsBySelectedFacets', () => {
     expect(
       filterProductsBySelectedFacets([hp, dell], [{ key: 'ft', value: 'laptop' }])
     ).toEqual([hp, dell])
+  })
+
+  it('keeps the matching products when VTEX sends the brand as `b`', () => {
+    // Searching from the input arrives as `map=ft,b`, which used to match no
+    // product and emptied the whole result set.
+    expect(
+      filterProductsBySelectedFacets([hp, dell], [{ key: 'b', value: 'hp' }])
+    ).toEqual([hp])
+  })
+
+  it('ORs `b` and `brand` together, since they are the same facet', () => {
+    expect(
+      filterProductsBySelectedFacets(
+        [hp, dell, acer],
+        [
+          { key: 'b', value: 'hp' },
+          { key: 'brand', value: 'acer' },
+        ]
+      )
+    ).toEqual([hp, acer])
+  })
+
+  it('still returns nothing when the brand filter excludes every result', () => {
+    expect(
+      filterProductsBySelectedFacets([hp, dell], [{ key: 'b', value: 'samsung' }])
+    ).toEqual([])
   })
 
   it('preserves the incoming ranking', () => {

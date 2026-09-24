@@ -7,6 +7,18 @@ const BRAND_KEY = 'brand'
 const PRICE_KEY = 'priceRange'
 const PRICE_RANGE_SEPARATOR = ' TO '
 
+/**
+ * VTEX names the brand facet `b` in `map`, while the facets built here are
+ * keyed `brand`. Searching from the input arrives as `query=jbl/jbl&map=ft,b`,
+ * so without this equivalence the brand filter matched no product and every
+ * result was dropped.
+ */
+const BRAND_KEY_ALIASES = new Set([BRAND_KEY, 'b'])
+
+function normalizeFacetKey(key: string): string {
+  return BRAND_KEY_ALIASES.has(key) ? BRAND_KEY : key
+}
+
 type FacetValueAccumulator = {
   name: string
   value: string
@@ -228,7 +240,13 @@ export function buildFacetsFromProducts(
   })
 
   const selectedByKey = selectedFacets.reduce((acc, { key, value }) => {
-    ;(acc[key] ??= new Set()).add(value)
+    const facetKey = normalizeFacetKey(key)
+
+    // Facet values are slugified, so the incoming selection is too; price
+    // ranges are the exception, they carry a literal `min TO max`.
+    ;(acc[facetKey] ??= new Set()).add(
+      facetKey === PRICE_KEY ? value : searchSlugify(value)
+    )
 
     return acc
   }, {} as Record<string, Set<string>>)
@@ -412,7 +430,7 @@ export function filterProductsBySelectedFacets(
 ): SearchProduct[] {
   const filters = selectedFacets.reduce((acc, { key, value }) => {
     if (key !== 'ft') {
-      ;(acc[key] ??= []).push(value)
+      ;(acc[normalizeFacetKey(key)] ??= []).push(value)
     }
 
     return acc
