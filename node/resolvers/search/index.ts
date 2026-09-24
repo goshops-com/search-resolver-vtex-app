@@ -22,6 +22,7 @@ import {
   resolveProduct,
   resolveProductsByIdentifier,
 } from '../../services/product'
+import { debugLog } from '../../services/debugLog'
 import { fetchProductSearch } from '../../services/productSearch'
 import { fetchAppSettings } from '../../services/settings'
 import type {
@@ -468,9 +469,12 @@ export const queries = {
   },
 
   productSearch: async (_: unknown, args: ProductSearchInput, ctx: Context) => {
-    console.log('TESTTT ":"', _);
-    console.log('TEST "args":', args);
-    console.log('TEST "ctx":', ctx);
+    debugLog(ctx, 'productSearch: entrada', {
+      query: args.query,
+      map: args.map,
+      fullText: args.fullText,
+      selectedFacets: args.selectedFacets,
+    })
 
     const [shippingOptions, facets] = getShippingOptionsFromSelectedFacets(
       args.selectedFacets
@@ -495,6 +499,13 @@ export const queries = {
         getFullTextFromMap(args.query, args.map) ??
         getFullTextFromSelectedFacets(selectedFacets)
     }
+
+    debugLog(ctx, 'productSearch: transformacion', {
+      query: args.query,
+      map: args.map,
+      fullText: args.fullText,
+      selectedFacets,
+    })
 
     return fetchProductSearch(ctx, args, selectedFacets ?? [], shippingOptions)
   },

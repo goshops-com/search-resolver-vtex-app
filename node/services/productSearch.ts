@@ -26,6 +26,7 @@ import {
   buildFacetsFromProducts,
   filterProductsBySelectedFacets,
 } from './gopersonalLocalFacets'
+import { debugLog } from './debugLog'
 import { fetchGoPersonalRankedIds } from './gopersonalSearch'
 import { hydrateProductsFromCatalog } from './gopersonalCatalog'
 import {
@@ -510,7 +511,6 @@ async function fetchProductSearchFromGoPersonal(
     ...getGoPersonalSession(ctx),
   })
 
-  console.log("TEST args.salesChannel:", args.salesChannel);
   // GoPersonal only ranks; the catalog is the source of truth for price,
   // stock, sellers and SKUs, so the ranked ids are hydrated into real catalog
   // products and re-sorted back into GoPersonal's ranking.
@@ -540,12 +540,30 @@ async function fetchProductSearchFromGoPersonal(
     filterableFieldIds
   )
 
+  debugLog(ctx, 'gopersonal: conteos', {
+    fullText: args.fullText,
+    salesChannel: args.salesChannel,
+    rankedIds: productIds.length,
+    hydrated: ranked.length,
+    afterFilter: filtered.length,
+    selectedFacets,
+  })
+
   const from = args.from ?? 0
   const to = args.to ?? from + filtered.length - 1
 
+  const products = filtered.slice(from, to + 1)
+
+  debugLog(ctx, 'gopersonal: salida', {
+    returned: products.length,
+    recordsFiltered: filtered.length,
+    from,
+    to,
+  })
+
   return {
     searchState: args.searchState,
-    products: filtered.slice(from, to + 1),
+    products,
     recordsFiltered: filtered.length,
     searchId,
     facets,
@@ -587,10 +605,18 @@ export async function fetchProductSearch(
   } = await fetchAppSettings(ctx)
 
   const hasFullTextQuery = Boolean(args.fullText?.trim())
-  console.log("TESTTT hasFullTextQuery:", hasFullTextQuery);
-  console.log("TESTTT searchEngine:", searchEngine);
-  if (hasFullTextQuery && searchEngine === 'gopersonal') {
-    console.log("TESTTT fetchProductSearchFromGoPersonal");
+  const usesGoPersonal = hasFullTextQuery && searchEngine === 'gopersonal'
+
+  debugLog(ctx, 'motor elegido', {
+    engine: usesGoPersonal ? 'gopersonal' : 'vtex',
+    searchEngine,
+    hasFullTextQuery,
+    fullText: args.fullText,
+    map: args.map,
+    query: args.query,
+  })
+
+  if (usesGoPersonal) {
     return fetchProductSearchFromGoPersonal(ctx, args, selectedFacets, {
       gopersonalProjectId,
       gopersonalLimit,
