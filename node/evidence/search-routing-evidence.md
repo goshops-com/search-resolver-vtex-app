@@ -99,3 +99,38 @@ servidor ya trae `$ROOT_QUERY.productSearch(...)` resuelto en `__STATE__`, así
 que la primera consulta ocurre antes de que corra cualquier script del
 navegador. Sólo podría reemplazar resultados después, que es justamente lo que
 no se quiere.
+
+### Prueba dirigida: ¿sirve leer la ruta desde los headers? (2026-09-25)
+
+La captura anterior de headers salía del XHR del navegador, así que quedaba
+abierta la posibilidad de que el render del servidor sí trajera la ruta real.
+Se instrumentó un probe temporal que volcaba todos los headers (sin cookie,
+authorization, credential, token ni segment) y se forzaron cargas frescas
+(`x-cache: Miss from cloudfront`).
+
+Resultado: **no sirve**. La petición que resuelve la búsqueda al recargar llega
+con `user-agent: Amazon CloudFront` y estos son todos sus headers de ruta:
+
+```
+x-forwarded-host: buscador--coolboxpe.myvtex.com
+x-forwarded-path: /_v/segment/graphql/v1?workspace=buscador&...
+                  &operationName=productSearchV3&variables=%7B%7D
+                  &extensions=%7B%22persistedQuery%22...
+referer: (ausente)
+```
+
+`x-forwarded-path` apunta al endpoint GraphQL y su `variables` viene vacío
+(`%7B%7D`): las variables reales viajan en el body, ya sin `_q`. No hay ningún
+header con la URL de la página. La opción de deducir la intención desde los
+headers queda **descartada con evidencia**, no por suposición.
+
+El mismo probe dejó dos datos útiles:
+
+| término | ¿marca? | variables en la carga directa | dónde resuelve |
+|---|---|---|---|
+| `audifonos` | no | `fullText:"audifonos"`, `selectedFacets:[{ft,audifonos}]` | cliente (`recordsFiltered` 0 en el HTML) |
+| `jbl` | sí | sin `fullText`, `selectedFacets:[{b,jbl}]` | servidor (`recordsFiltered` 227 en el HTML) |
+
+Es decir: para un término que no es marca el `_q` **sí** llega como `fullText`.
+El problema es exclusivo del ruteo a `store.search#brand`, que reemplaza la
+intención de búsqueda por la de página de marca antes de armar las variables.
