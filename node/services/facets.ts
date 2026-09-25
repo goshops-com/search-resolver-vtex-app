@@ -131,9 +131,12 @@ async function fetchFacetsFromGoPersonal(
     ).length,
     sampling: false,
     breadcrumb: [],
+    // The storefront rebuilds every facet link on top of these, so they must
+    // describe the search itself: an empty `map` makes each filter click drop
+    // the term and navigate to the plain brand/category page instead.
     queryArgs: {
-      query: args.fullText,
-      map: args.selectedFacets?.map((facet) => facet.key).join(',') ?? '',
+      query: selectedFacets?.map((facet) => facet.value).join('/') ?? '',
+      map: selectedFacets?.map((facet) => facet.key).join(',') ?? '',
       selectedFacets: selectedFacets ?? [],
     },
   }

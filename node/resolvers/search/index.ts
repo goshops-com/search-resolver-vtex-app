@@ -121,6 +121,42 @@ type FullTextSignalArgs = {
   selectedFacets?: SelectedFacet[]
 }
 
+// Facets that identify a curated page (collections, carousels, brand-by-id
+// shelves such as the ones `/mundo-jbl` renders). A request holding any of them
+// is navigation, never a text search, no matter which brand it points at.
+const CURATED_NAVIGATION_KEYS = ['productClusterIds', 'brandId', 'collection']
+
+// VTEX's own compatibility layer normalizes `brand` into `b`, but it bails out
+// early on the single-segment pairs a brand page produces, so both spellings
+// reach this resolver and have to be recognized alike.
+const isBrandKey = (key?: string) => key === 'b' || key === 'brand'
+
+/**
+ * Reads the search term out of a brand page route.
+ *
+ * VTEX routes `/<brand>` — and `/<brand>?_q=<brand>&map=ft` once it rewrites it
+ * to `store.search#brand` — as a bare `b` segment, with no trace of the term.
+ * Taking that leading brand as the term is what keeps both entry points on the
+ * same engine and the same results.
+ *
+ * The scope is deliberately narrow: only a `map` that *starts* with `b`
+ * qualifies, so category pages (`c,b`) keep navigating, and the curated shelves
+ * (which arrive as `selectedFacets` with no `map` at all) never reach here.
+ */
+const getFullTextFromRoutedBrand = (query?: string, map?: string) => {
+  const mapSegments = map?.split(MAP_VALUES_SEP) ?? []
+
+  if (!isBrandKey(mapSegments[0])) {
+    return undefined
+  }
+
+  if (mapSegments.some((segment) => CURATED_NAVIGATION_KEYS.includes(segment))) {
+    return undefined
+  }
+
+  return query?.split(PATH_SEPARATOR)[0] || undefined
+}
+
 // True when the request already states it is a text search, before the
 // compatibility layer gets a chance to infer one.
 const hasExplicitFullText = (args: FullTextSignalArgs) =>
@@ -129,19 +165,24 @@ const hasExplicitFullText = (args: FullTextSignalArgs) =>
   Boolean(args.selectedFacets?.some((facet) => facet.key === 'ft'))
 
 /**
- * Drops the brand facet that VTEX's routing adds on its own.
+ * Replaces the brand facet that VTEX's routing adds on its own with the search
+ * term it stands for.
  *
  * When the searched term is also a brand, `/<term>?_q=<term>&map=ft` is routed
- * to the brand page and reaches this resolver as a bare `b` facet; the `ft`
- * segment only reappears once the compatibility layer expands it. Keeping that
+ * to the brand page and reaches this resolver as a bare `b` facet. Keeping that
  * brand would filter the search down to the brand's own catalogue and hide
  * every other result the engine ranked for the term.
+ *
+ * The `ft` segment has to take its place rather than just disappear: the
+ * storefront rebuilds every facet link out of the `queryArgs` this returns, so
+ * dropping the brand without leaving the term behind makes each filter click
+ * navigate back to the plain brand page.
  *
  * A brand the shopper picks always travels with its own `ft` segment
  * (`map=ft,b`), so `hadExplicitFullText` is what tells the two apart, and the
  * term comparison keeps any other brand chosen on top of a search.
  */
-const dropRoutedBrandFacet = (
+const replaceRoutedBrandWithTerm = (
   selectedFacets: SelectedFacet[] | undefined,
   fullText: string | undefined,
   hadExplicitFullText: boolean
@@ -152,9 +193,17 @@ const dropRoutedBrandFacet = (
 
   const term = searchSlugify(fullText)
 
-  return selectedFacets.filter(
-    (facet) => !(facet.key === 'b' && searchSlugify(facet.value) === term)
+  const kept = selectedFacets.filter(
+    (facet) => !(isBrandKey(facet.key) && searchSlugify(facet.value) === term)
   )
+
+  if (kept.length === selectedFacets.length) {
+    return selectedFacets
+  }
+
+  return kept.some((facet) => facet.key === 'ft')
+    ? kept
+    : [...kept, { key: 'ft', value: fullText }]
 }
 
 export const getCompatibilityArgs = async <T extends QueryArgs>(
@@ -439,10 +488,11 @@ export const queries = {
     if (!args.fullText) {
       args.fullText =
         getFullTextFromMap(args.query, args.map) ??
-        getFullTextFromSelectedFacets(args.selectedFacets)
+        getFullTextFromSelectedFacets(args.selectedFacets) ??
+        getFullTextFromRoutedBrand(args.query, args.map)
     }
 
-    args.selectedFacets = dropRoutedBrandFacet(
+    args.selectedFacets = replaceRoutedBrandWithTerm(
       args.selectedFacets,
       args.fullText,
       hadExplicitFullText
@@ -556,10 +606,11 @@ export const queries = {
     if (!args.fullText) {
       args.fullText =
         getFullTextFromMap(args.query, args.map) ??
-        getFullTextFromSelectedFacets(args.selectedFacets)
+        getFullTextFromSelectedFacets(args.selectedFacets) ??
+        getFullTextFromRoutedBrand(args.query, args.map)
     }
 
-    args.selectedFacets = dropRoutedBrandFacet(
+    args.selectedFacets = replaceRoutedBrandWithTerm(
       args.selectedFacets,
       args.fullText,
       hadExplicitFullText

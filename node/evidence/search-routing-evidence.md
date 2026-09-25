@@ -134,3 +134,88 @@ El mismo probe dejó dos datos útiles:
 Es decir: para un término que no es marca el `_q` **sí** llega como `fullText`.
 El problema es exclusivo del ruteo a `store.search#brand`, que reemplaza la
 intención de búsqueda por la de página de marca antes de armar las variables.
+
+## 3. La regla que activa GoPersonal (2026-09-25)
+
+Como la intención de búsqueda no sobrevive al ruteo, la página de marca se
+interpreta como lo que la persona escribió: **si el `map` empieza por `b` (o su
+alias `brand`) y no hay ninguna clave de navegación curada, el primer segmento
+del `query` se toma como término de texto**. Eso deja `/jbl` y
+`/jbl?_q=jbl&map=ft` en el mismo motor, que es la decisión que se tomó.
+
+El alcance es angosto a propósito:
+
+| solicitud | `map` | ¿GoPersonal? | por qué |
+|---|---|---|---|
+| `/jbl` | `b` / `brand` | sí | marca sola al frente |
+| `/jbl?_q=jbl&map=ft` | `b` / `brand` | sí | el ruteo la vuelve indistinguible de la anterior |
+| categoría filtrada por marca | `c,b` / `category-2,brand` | no | el `b` no va primero: es navegación |
+| vitrina de colección | `b,productClusterIds` | no | clave curada presente |
+| vitrina de `/mundo-jbl` | `category-N` + `brandId` | no | clave curada presente |
+
+Las claves curadas que bloquean la regla son `productClusterIds`, `brandId` y
+`collection`, que son justamente las que arman las vitrinas de `/mundo-jbl`.
+
+### El `ft` tiene que reemplazar a la marca, no sólo borrarla
+
+El primer intento quitaba la marca ruteada y dejaba `selectedFacets` vacío. El
+grid salía bien, pero **al tocar cualquier filtro la búsqueda se perdía**: el
+theme reconstruye cada enlace de faceta a partir del `queryArgs` que devolvemos,
+y con `map:""` volvía a `map=brand&query=/jbl`, o sea a la página de marca por
+VTEX (228).
+
+```
+antes   queryArgs = {query:"jbl", map:"",   selectedFacets:[]}        -> clic en un filtro = 228 (VTEX)
+después queryArgs = {query:"jbl", map:"ft", selectedFacets:[{ft,jbl}]} -> clic en un filtro = 80 (GoPersonal)
+```
+
+Por eso `replaceRoutedBrandWithTerm` deja el segmento `ft` en lugar de la marca,
+y `services/facets.ts` arma `queryArgs` desde las facetas ya transformadas.
+
+### El alias `brand` también llega crudo
+
+Los logs del navegador mostraron `map:"brand"`, no `b`: la capa de
+compatibilidad de VTEX normaliza `brand`→`b` pero sale antes en los pares de un
+solo segmento. Reconocer sólo `b` hacía que la página cargara por VTEX (228)
+mientras la consulta GraphQL directa con `b` daba 90. Ambas grafías se tratan
+igual.
+
+## 4. Validación en el navegador (2026-09-25)
+
+Workspace `buscador`. Conteos de GoPersonal varían entre llamadas por el rerank
+no determinista; lo que se compara es el motor y los criterios.
+
+| caso | URL final | resultados | marcas en el grid |
+|---|---|---|---|
+| buscar `jbl` en el input | `/jbl?_q=jbl&map=ft` | 90 | JBL + 1Hora, Izuum, Philips, Sony |
+| recargar esa URL | igual, sin redirección | 90 | JBL + 1Hora, Izuum, Miccell |
+| misma URL en pestaña nueva | igual | 91 | JBL + 1Hora, Izuum, Miccell |
+| `/jbl` directo | `/jbl` | 91 | JBL + 1Hora, Izuum, Philips, Sony |
+| `/sony` directo | `/sony` | 95 | Sony + 1Hora, Izuum, QCY, Philips… |
+| `/hp?_q=hp&map=ft` | igual | 64 | HP + Epson, Canon, Brother |
+| `audifonos` (no es marca) | `/audifonos?_q=audifonos&map=ft` | 83 | mezcla |
+
+Filtros y paginación sobre la búsqueda `jbl`:
+
+| acción | resultados | estado |
+|---|---|---|
+| marcar JBL a mano | 80 | chip `JBL`, checkbox marcado |
+| quitarla | 92 | sin chips, vuelve la mezcla |
+| marcar Sony | 1 | único Sony que el motor rankea para `jbl` |
+| Sony + categoría Parlantes | 0 | correcto: ese Sony es audífono, no parlante |
+| JBL + categoría Parlantes | 50 | chips `JBL`, `Parlantes` |
+| esa misma URL recargada | 50 | filtros conservados |
+| esa misma URL en pestaña nueva | 50 | filtros conservados |
+| `&page=2` | 50 de 50 | paginador en 2, chips conservados |
+| Atrás / Adelante | 48 de 50 / 50 de 50 | historial coherente |
+
+### `/mundo-jbl` quedó intacta
+
+Se capturó la página antes del cambio (entrando directo y desde el enlace de la
+home) y se volvió a capturar después: **los mismos 60 productos, en el mismo
+orden, en las tres capturas**. Sus consultas siguen resolviendo por VTEX.
+
+| vitrina | antes | después |
+|---|---|---|
+| `productClusterIds:1382` | 42 | 42 |
+| `category-1:audio` + `brandId:2000045` | 227 | 227 |
