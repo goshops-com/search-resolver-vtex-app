@@ -33,6 +33,7 @@ import type {
 } from '../../typings/Search'
 import { applyHideUnavailableItemsDefaultForDP } from '../../utils/hideUnavailableItems'
 import { shouldTranslateToTenantLocale } from '../../utils/i18n'
+import { searchSlugify } from '../../utils/slug'
 import { extractSegmentData, getOrCreateSegment } from '../../utils/segment'
 import { resolvers as assemblyOptionResolvers } from './assemblyOption'
 import { resolvers as autocompleteResolvers } from './autocomplete'
@@ -113,6 +114,48 @@ const getFullTextFromMap = (query?: string, map?: string) => {
 // the free-text term must also be recovered from there to route to GoPersonal.
 const getFullTextFromSelectedFacets = (selectedFacets?: SelectedFacet[]) =>
   selectedFacets?.find((facet) => facet.key === 'ft')?.value || undefined
+
+type FullTextSignalArgs = {
+  fullText?: string
+  map?: string
+  selectedFacets?: SelectedFacet[]
+}
+
+// True when the request already states it is a text search, before the
+// compatibility layer gets a chance to infer one.
+const hasExplicitFullText = (args: FullTextSignalArgs) =>
+  Boolean(args.fullText?.trim()) ||
+  Boolean(args.map?.split(MAP_VALUES_SEP).includes('ft')) ||
+  Boolean(args.selectedFacets?.some((facet) => facet.key === 'ft'))
+
+/**
+ * Drops the brand facet that VTEX's routing adds on its own.
+ *
+ * When the searched term is also a brand, `/<term>?_q=<term>&map=ft` is routed
+ * to the brand page and reaches this resolver as a bare `b` facet; the `ft`
+ * segment only reappears once the compatibility layer expands it. Keeping that
+ * brand would filter the search down to the brand's own catalogue and hide
+ * every other result the engine ranked for the term.
+ *
+ * A brand the shopper picks always travels with its own `ft` segment
+ * (`map=ft,b`), so `hadExplicitFullText` is what tells the two apart, and the
+ * term comparison keeps any other brand chosen on top of a search.
+ */
+const dropRoutedBrandFacet = (
+  selectedFacets: SelectedFacet[] | undefined,
+  fullText: string | undefined,
+  hadExplicitFullText: boolean
+) => {
+  if (hadExplicitFullText || !selectedFacets || !fullText) {
+    return selectedFacets
+  }
+
+  const term = searchSlugify(fullText)
+
+  return selectedFacets.filter(
+    (facet) => !(facet.key === 'b' && searchSlugify(facet.value) === term)
+  )
+}
 
 export const getCompatibilityArgs = async <T extends QueryArgs>(
   ctx: Context,
@@ -389,15 +432,31 @@ export const queries = {
 
     args.selectedFacets = facets
 
-    args = await getCompatibilityArgsFromSelectedFacets(ctx, args)
+    const hadExplicitFullText = hasExplicitFullText(args)
 
-    const { selectedFacets } = args
+    args = await getCompatibilityArgsFromSelectedFacets(ctx, args)
 
     if (!args.fullText) {
       args.fullText =
         getFullTextFromMap(args.query, args.map) ??
-        getFullTextFromSelectedFacets(selectedFacets)
+        getFullTextFromSelectedFacets(args.selectedFacets)
     }
+
+    args.selectedFacets = dropRoutedBrandFacet(
+      args.selectedFacets,
+      args.fullText,
+      hadExplicitFullText
+    )
+
+    const { selectedFacets } = args
+
+    debugLog(ctx, 'facets: transformacion', {
+      query: args.query,
+      map: args.map,
+      fullText: args.fullText,
+      hadExplicitFullText,
+      selectedFacets,
+    })
 
     return fetchFacets(ctx, {
       args,
@@ -482,6 +541,8 @@ export const queries = {
 
     args.selectedFacets = facets
 
+    const hadExplicitFullText = hasExplicitFullText(args)
+
     args = await getCompatibilityArgsFromSelectedFacets(ctx, args)
 
     if (!validMapAndQuery(args.query, args.map)) {
@@ -492,18 +553,25 @@ export const queries = {
       })
     }
 
-    const { selectedFacets } = args
-
     if (!args.fullText) {
       args.fullText =
         getFullTextFromMap(args.query, args.map) ??
-        getFullTextFromSelectedFacets(selectedFacets)
+        getFullTextFromSelectedFacets(args.selectedFacets)
     }
+
+    args.selectedFacets = dropRoutedBrandFacet(
+      args.selectedFacets,
+      args.fullText,
+      hadExplicitFullText
+    )
+
+    const { selectedFacets } = args
 
     debugLog(ctx, 'productSearch: transformacion', {
       query: args.query,
       map: args.map,
       fullText: args.fullText,
+      hadExplicitFullText,
       selectedFacets,
     })
 
