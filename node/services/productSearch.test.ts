@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { fetchProductSearch } from './productSearch'
 import { createContext } from '../mocks/contextFactory'
 import type { ProductSearchInput } from '../typings/Search'
@@ -68,7 +69,7 @@ describe('fetchProductSearch service', () => {
         expect.objectContaining({
           project_id: 'proj-1',
           query: 'test query',
-          limit: 200,
+          limit: config.gopersonal.limit,
           return_all_ids: true,
         })
       )
@@ -363,7 +364,7 @@ describe('fetchProductSearch service', () => {
       expect(ctx.clients.gopersonal.search).toHaveBeenCalledWith({
         project_id: 'proj-2',
         query: 'test query',
-        limit: 200,
+        limit: config.gopersonal.limit,
         page_size: 1,
         return_all_ids: true,
       })

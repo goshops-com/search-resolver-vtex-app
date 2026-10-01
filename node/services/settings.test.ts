@@ -1,3 +1,4 @@
+import { config } from '../config'
 import { createContext } from '../mocks/contextFactory'
 import { FACET_DEFAULTS, fetchAppSettings } from './settings'
 
@@ -16,7 +17,7 @@ describe('fetchAppSettings', () => {
       shouldUseNewPLPEndpoint: false,
       searchEngine: 'gopersonal',
       gopersonalProjectId: 'proj-1',
-      gopersonalLimit: 200,
+      gopersonalLimit: config.gopersonal.limit,
       facets: FACET_DEFAULTS,
     })
   })
@@ -95,7 +96,7 @@ describe('fetchAppSettings', () => {
       shouldUseNewPLPEndpoint: true,
       searchEngine: 'vtex',
       gopersonalProjectId: '',
-      gopersonalLimit: 200,
+      gopersonalLimit: config.gopersonal.limit,
       facets: FACET_DEFAULTS,
     })
   })
