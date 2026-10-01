@@ -50,9 +50,6 @@ In `manifest.json`, change `"vendor"` to that account:
 }
 ```
 
-Change it in `policies.json` too, where the vendor is part of the resource
-(`vrn:youraccount.gopersonal-search-resolver:...`) — VTEX has no template for it.
-
 Confirm which account you are on with `vtex whoami`.
 
 ## 2. Remove the native search resolver
