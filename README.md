@@ -50,6 +50,9 @@ In `manifest.json`, change `"vendor"` to that account:
 }
 ```
 
+Change it in `policies.json` too, where the vendor is part of the resource
+(`vrn:youraccount.gopersonal-search-resolver:...`) — VTEX has no template for it.
+
 Confirm which account you are on with `vtex whoami`.
 
 ## 2. Remove the native search resolver
@@ -89,7 +92,7 @@ vtex publish
 ## 4. Install it
 
 ```sh
-vtex install youraccount.gopersonal-search-resolver@1.x
+vtex install youraccount.gopersonal-search-resolver@2.x
 ```
 
 ## 5. Configure the project id and review the app settings
