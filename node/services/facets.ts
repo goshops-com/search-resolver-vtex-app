@@ -13,13 +13,7 @@ import {
   buildFacetsFromProducts,
   filterProductsBySelectedFacets,
 } from './gopersonalLocalFacets'
-import { fetchGoPersonalRankedIds } from './gopersonalSearch'
-import { hydrateProductsFromCatalog } from './gopersonalCatalog'
-import {
-  extractSpecificationFieldIds,
-  fetchFilterableFieldIds,
-} from './specificationFilters'
-import { getGoPersonalSession } from './gopersonalSession'
+import { fetchGoPersonalResultSet } from './gopersonalResultSet'
 
 type SegmentData = ReturnType<typeof extractSegmentData>
 
@@ -101,21 +95,13 @@ async function fetchFacetsFromGoPersonal(
 ) {
   const { args, selectedFacets } = options
 
-  const { productIds } = await fetchGoPersonalRankedIds(ctx, {
-    project_id: settings.gopersonalProjectId,
-    query: args.fullText,
+  // Same set the parallel `productSearch` query ranks and hydrates, so facet
+  // counts keep matching the grid and the page pays for it once.
+  const { products, filterableFieldIds } = await fetchGoPersonalResultSet(ctx, {
+    projectId: settings.gopersonalProjectId,
+    query: args.fullText ?? '',
     limit: settings.gopersonalLimit,
-    // Same identifiers as the product query, so both sides of a page rank the
-    // same set and facet counts keep matching the grid.
-    ...getGoPersonalSession(ctx),
   })
-
-  const products = await hydrateProductsFromCatalog(ctx, productIds)
-
-  const filterableFieldIds = await fetchFilterableFieldIds(
-    ctx,
-    extractSpecificationFieldIds(products)
-  )
 
   return {
     facets: buildFacetsFromProducts(

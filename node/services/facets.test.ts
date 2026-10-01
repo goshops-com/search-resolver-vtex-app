@@ -1,6 +1,7 @@
 import { fetchFacets } from './facets'
 import { createContext } from '../mocks/contextFactory'
 import type { FacetsInput } from '../typings/Search'
+import { clearGoPersonalResultSetCache } from './gopersonalResultSet'
 
 describe('fetchFacets service', () => {
   const mockFacetsResponse = {
@@ -31,6 +32,7 @@ describe('fetchFacets service', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    clearGoPersonalResultSetCache()
   })
 
   it('should default hideUnavailableItems=true when DP is enabled and hideUnavailableItems is undefined', async () => {

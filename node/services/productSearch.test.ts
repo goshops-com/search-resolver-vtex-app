@@ -2,6 +2,7 @@ import { config } from '../config'
 import { fetchProductSearch } from './productSearch'
 import { createContext } from '../mocks/contextFactory'
 import type { ProductSearchInput } from '../typings/Search'
+import { clearGoPersonalResultSetCache } from './gopersonalResultSet'
 
 describe('fetchProductSearch service', () => {
   const mockArgs: ProductSearchInput = {
@@ -23,6 +24,7 @@ describe('fetchProductSearch service', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    clearGoPersonalResultSetCache()
   })
 
   describe('GoPersonal routing', () => {

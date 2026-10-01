@@ -26,13 +26,7 @@ import {
   buildFacetsFromProducts,
   filterProductsBySelectedFacets,
 } from './gopersonalLocalFacets'
-import { fetchGoPersonalRankedIds } from './gopersonalSearch'
-import { hydrateProductsFromCatalog } from './gopersonalCatalog'
-import {
-  extractSpecificationFieldIds,
-  fetchFilterableFieldIds,
-} from './specificationFilters'
-import { getGoPersonalSession } from './gopersonalSession'
+import { fetchGoPersonalResultSet } from './gopersonalResultSet'
 
 type SegmentData = ReturnType<typeof extractSegmentData>
 
@@ -503,26 +497,17 @@ async function fetchProductSearchFromGoPersonal(
   selectedFacets: SelectedFacet[],
   settings: GoPersonalSettings
 ): Promise<ProductSearchResponse & { searchState?: string; facets?: Facet[] }> {
-  const { productIds, searchId } = await fetchGoPersonalRankedIds(ctx, {
-    project_id: settings.gopersonalProjectId,
-    query: args.fullText,
+  // Shared with the parallel `facets` query of the same page.
+  const {
+    searchId,
+    products: ranked,
+    filterableFieldIds,
+  } = await fetchGoPersonalResultSet(ctx, {
+    projectId: settings.gopersonalProjectId,
+    query: args.fullText ?? '',
     limit: settings.gopersonalLimit,
-    ...getGoPersonalSession(ctx),
+    salesChannel: args.salesChannel,
   })
-
-  // GoPersonal only ranks; the catalog is the source of truth for price,
-  // stock, sellers and SKUs, so the ranked ids are hydrated into real catalog
-  // products and re-sorted back into GoPersonal's ranking.
-  const ranked = await hydrateProductsFromCatalog(
-    ctx,
-    productIds,
-    args.salesChannel
-  )
-
-  const filterableFieldIds = await fetchFilterableFieldIds(
-    ctx,
-    extractSpecificationFieldIds(ranked)
-  )
 
   // Facets describe the unfiltered result set so every value stays selectable
   // after the shopper picks one.
