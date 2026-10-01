@@ -1,7 +1,7 @@
 {
   "vendor": "gopersonal",
   "name": "gopersonal-search-resolver",
-  "version": "1.104.0",
+  "version": "2.0.0",
   "title": "GoPersonal Search Resolver",
   "description": "GraphQL resolvers for the VTEX search schema, with product search and facets powered by the GoPersonal search engine.",
   "credentialType": "absolute",
