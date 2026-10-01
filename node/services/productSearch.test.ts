@@ -57,6 +57,7 @@ describe('fetchProductSearch service', () => {
       const ctx = createContext({
         accountName: 'testaccount',
         appSettings: {
+          useGoPersonalSearch: true,
           gopersonalProjectId: 'proj-1',
         },
         gopersonalSettings: {
@@ -93,7 +94,7 @@ describe('fetchProductSearch service', () => {
 
       const ctx = createContext({
         accountName: 'testaccount',
-        appSettings: { gopersonalProjectId: 'proj-1' },
+        appSettings: { useGoPersonalSearch: true, gopersonalProjectId: 'proj-1' },
         gopersonalSettings: { search: multiHitResponse },
         // Deliberately in catalog order, which differs from the ranking.
         catalogProducts: [
@@ -117,7 +118,7 @@ describe('fetchProductSearch service', () => {
     it('drops ranked ids the catalog does not know without leaving holes', async () => {
       const ctx = createContext({
         accountName: 'testaccount',
-        appSettings: { gopersonalProjectId: 'proj-1' },
+        appSettings: { useGoPersonalSearch: true, gopersonalProjectId: 'proj-1' },
         gopersonalSettings: {
           search: {
             hits: [],
@@ -137,7 +138,7 @@ describe('fetchProductSearch service', () => {
     it('never renders a product twice when the ranking repeats an id', async () => {
       const ctx = createContext({
         accountName: 'testaccount',
-        appSettings: { gopersonalProjectId: 'proj-1' },
+        appSettings: { useGoPersonalSearch: true, gopersonalProjectId: 'proj-1' },
         gopersonalSettings: {
           search: {
             hits: [],
@@ -169,6 +170,7 @@ describe('fetchProductSearch service', () => {
         accountName: 'testaccount',
         appSettings: {
           shouldUseNewPLPEndpoint: true,
+          useGoPersonalSearch: true,
           gopersonalProjectId: 'proj-1',
         },
         gopersonalSettings: { search: gopersonalResponse },
@@ -185,6 +187,7 @@ describe('fetchProductSearch service', () => {
         accountName: 'testaccount',
         appSettings: {
           shouldUseNewPLPEndpoint: true,
+          useGoPersonalSearch: true,
           gopersonalProjectId: 'proj-1',
         },
         gopersonalSettings: { search: gopersonalResponse },
@@ -205,6 +208,7 @@ describe('fetchProductSearch service', () => {
         accountName: 'testaccount',
         appSettings: {
           shouldUseNewPLPEndpoint: true,
+          useGoPersonalSearch: true,
           gopersonalProjectId: 'proj-1',
         },
         gopersonalSettings: { search: gopersonalResponse },
@@ -224,6 +228,7 @@ describe('fetchProductSearch service', () => {
       const ctx = createContext({
         accountName: 'testaccount',
         appSettings: {
+          useGoPersonalSearch: true,
           gopersonalProjectId: 'proj-1',
         },
         gopersonalSettings: { search: gopersonalResponse },
@@ -242,6 +247,7 @@ describe('fetchProductSearch service', () => {
       const ctx = createContext({
         accountName: 'testaccount',
         appSettings: {
+          useGoPersonalSearch: true,
           gopersonalProjectId: 'proj-1',
         },
         gopersonalSettings: { search: gopersonalResponse },
@@ -268,7 +274,7 @@ describe('fetchProductSearch service', () => {
     it('covers the whole result set with a single search call', async () => {
       const ctx = createContext({
         accountName: 'testaccount',
-        appSettings: { gopersonalProjectId: 'proj-1' },
+        appSettings: { useGoPersonalSearch: true, gopersonalProjectId: 'proj-1' },
         gopersonalSettings: {
           search: {
             hits: [],
@@ -307,7 +313,7 @@ describe('fetchProductSearch service', () => {
 
       const ctx = createContext({
         accountName: 'testaccount',
-        appSettings: { gopersonalProjectId: 'proj-1' },
+        appSettings: { useGoPersonalSearch: true, gopersonalProjectId: 'proj-1' },
         gopersonalSettings: {
           search: {
             hits: [],
@@ -352,6 +358,7 @@ describe('fetchProductSearch service', () => {
       const ctx = createContext({
         accountName: 'testaccount',
         appSettings: {
+          useGoPersonalSearch: true,
           gopersonalProjectId: 'proj-2',
         },
         gopersonalSettings: { search: gopersonalResponse },

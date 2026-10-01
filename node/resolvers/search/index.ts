@@ -121,7 +121,7 @@ type FullTextSignalArgs = {
 }
 
 // Facets that identify a curated page (collections, carousels, brand-by-id
-// shelves such as the ones `/mundo-jbl` renders). A request holding any of them
+// shelves on a landing page built in Site Editor). A request holding any of them
 // is navigation, never a text search, no matter which brand it points at.
 const CURATED_NAVIGATION_KEYS = ['productClusterIds', 'brandId', 'collection']
 

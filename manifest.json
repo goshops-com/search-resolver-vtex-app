@@ -1,5 +1,5 @@
 {
-  "vendor": "coolboxpe",
+  "vendor": "gopersonal",
   "name": "gopersonal-search-resolver",
   "version": "1.104.0",
   "title": "GoPersonal Search Resolver",
@@ -24,18 +24,11 @@
         "title": "Use GoPersonal as the search engine",
         "description": "When unchecked, full-text queries are answered by VTEX Intelligent Search. Falls back to VTEX automatically when no GoPersonal project id is set.",
         "type": "boolean",
-        "default": true
+        "default": false
       },
       "gopersonalProjectId": {
         "title": "GoPersonal project id",
-        "type": "string",
-        "default": "6a91a8f3a5da3cc7150a4c03"
-      },
-      "facetsLocale": {
-        "title": "Filter sorting locale",
-        "description": "Locale used to sort filter names alphabetically, so accented letters land where the store's language expects them. Example: es, pt, en.",
-        "type": "string",
-        "default": "es"
+        "type": "string"
       },
       "brandGroupName": {
         "title": "Brand filter title",

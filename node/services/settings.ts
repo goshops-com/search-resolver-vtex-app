@@ -1,8 +1,8 @@
 import type { SearchEngine } from '../config'
 import { config } from '../config'
+import { APP_NAME } from '../resolvers/search/constants'
 
 export type FacetSettings = {
-  locale: string
   brandGroupName: string
   priceGroupName: string
   categoryLevelNames: string[]
@@ -26,7 +26,6 @@ type StoredSettings = Partial<{
   gopersonalProjectId: string
   gopersonalLimit: number
   useGoPersonalSearch: boolean
-  facetsLocale: string
   brandGroupName: string
   priceGroupName: string
   categoryLevelNames: string[]
@@ -45,13 +44,12 @@ const FORCE_NEW_PDP_HEADER = 'x-vtex-force-new-pdp-endpoint'
 
 /** Mirrors `settingsSchema.properties.useGoPersonalSearch.default` in the
  * manifest, which is what the admin shows before anyone saves the form. */
-const MANIFEST_USE_GOPERSONAL_DEFAULT = true
+const MANIFEST_USE_GOPERSONAL_DEFAULT = false
 
 /** Mirror of the `default` each facet property declares in the manifest.
  * `getAppSettings` returns nothing for a property until the admin saves the
  * form, so the values the admin displays have to exist here too. */
 export const FACET_DEFAULTS: FacetSettings = {
-  locale: 'es',
   brandGroupName: 'Marca',
   priceGroupName: 'Precio',
   categoryLevelNames: ['Departamento', 'Categoría', 'Sub-Categoría'],
@@ -66,7 +64,6 @@ function nonEmpty<T>(value: T[] | undefined, fallback: T[]): T[] {
 
 function resolveFacetSettings(settings: StoredSettings): FacetSettings {
   return {
-    locale: settings.facetsLocale || FACET_DEFAULTS.locale,
     brandGroupName: settings.brandGroupName || FACET_DEFAULTS.brandGroupName,
     priceGroupName: settings.priceGroupName || FACET_DEFAULTS.priceGroupName,
     categoryLevelNames: nonEmpty(
@@ -113,11 +110,8 @@ export async function fetchAppSettings(ctx: Context): Promise<AppSettings> {
   const forceNewPLP = ctx.get(FORCE_NEW_PLP_HEADER) === 'true'
   const forceNewPDP = ctx.get(FORCE_NEW_PDP_HEADER) === 'true'
 
-  const appId =
-    process.env.VTEX_APP_ID ?? 'qacoolboxpe.gopersonal-search-resolver@1.x'
-
   try {
-    const settings: StoredSettings = await apps.getAppSettings(appId)
+    const settings: StoredSettings = await apps.getAppSettings(APP_NAME)
 
     const gopersonalProjectId =
       settings.gopersonalProjectId ?? GOPERSONAL_DEFAULTS.gopersonalProjectId

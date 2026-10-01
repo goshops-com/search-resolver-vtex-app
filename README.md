@@ -98,7 +98,8 @@ In the VTEX admin, go to **Apps → My apps → GoPersonal Search Resolver →
 Settings**, then:
 
 1. Set **GoPersonal project id** to the id GoPersonal gave you.
-2. Leave **Use GoPersonal as the search engine** ticked.
+2. Tick **Use GoPersonal as the search engine** — it ships unticked, so a fresh
+   install keeps answering with VTEX Intelligent Search until you switch.
 3. Review the remaining settings against the store's catalog and language — see
    [Admin settings](#admin-settings) below.
 
@@ -115,9 +116,8 @@ duplicate specifications.
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| Use GoPersonal as the search engine | checked | The only place the engine is chosen. Unticked, full-text queries go to VTEX Intelligent Search. It also falls back to VTEX on its own when no project id is set, so you can install the app and keep Intelligent Search until you are ready to switch. |
+| Use GoPersonal as the search engine | unchecked | The only place the engine is chosen. Unticked, full-text queries go to VTEX Intelligent Search. It also falls back to VTEX on its own when no project id is set, so an install keeps Intelligent Search until both are set. |
 | GoPersonal project id | *(empty)* | The GoPersonal project answering queries. |
-| Filter sorting locale | `es` | Locale used to alphabetize filter groups, so accented letters land where the store's language expects them. |
 | Brand filter title | `Marca` | Title of the brand filter. Specifications with this same name are dropped, since they duplicate the brand the product already carries. |
 | Price filter title | `Precio` | Title of the price range filter. |
 | Category filter titles, by level | `Departamento`, `Categoría`, `Sub-Categoría` | One title per category tree level, broadest first. Deeper levels reuse the third name followed by their depth. |

@@ -20,6 +20,10 @@ const BRAND_KEY_ALIASES = new Set([BRAND_KEY, 'b'])
 const CATEGORY_ANY_KEY = 'categoryAnyDepth'
 const CATEGORY_ANY_ALIASES = new Set(['c'])
 
+/** Alphabetizes filter names with Spanish rules, so accented letters land next
+ * to their plain ones ("Óptica" with "O", not after "Z"). */
+const FACET_SORT_LOCALE = 'es'
+
 function normalizeFacetKey(key: string): string {
   if (BRAND_KEY_ALIASES.has(key)) {
     return BRAND_KEY
@@ -51,8 +55,8 @@ type ProductSpecification = {
  *
  * `completeSpecifications` is used rather than the `allSpecifications` name
  * list because it carries the `FieldId`, which is what tells apart the several
- * unrelated fields sharing a name (five different "Marca", eleven "Color") and
- * is the only way to look up whether a field is filterable.
+ * unrelated fields a catalog may have under the same name (several "Color", say)
+ * and is the only way to look up whether a field is filterable.
  */
 function getSpecifications(
   product: SearchProduct,
@@ -108,9 +112,9 @@ type FacetEntry = {
 /**
  * Group names owned by a product field rather than by a specification.
  *
- * Several specifications are also called "Marca", but they hold a partial,
- * unnormalized copy of what `product.brand` already carries, so they would
- * surface as a second, poorer filter under the very same title.
+ * A catalog may also have specifications named like the brand filter, but they
+ * hold a partial, unnormalized copy of what `product.brand` already carries, so
+ * they would surface as a second, poorer filter under the very same title.
  */
 function nativeGroupNames(settings: FacetSettings): Set<string> {
   return new Set(
@@ -316,7 +320,7 @@ function sortFacetGroups(facets: Facet[], settings: FacetSettings): Facet[] {
   }
 
   return [...facets].sort(
-    (a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name, settings.locale)
+    (a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name, FACET_SORT_LOCALE)
   )
 }
 

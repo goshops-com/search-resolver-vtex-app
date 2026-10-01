@@ -12,7 +12,7 @@ const catalogProduct = (productId: string) =>
 const pageContext = (overrides: Record<string, any> = {}) =>
   createContext({
     accountName: 'testaccount',
-    appSettings: { gopersonalProjectId: 'proj-1' },
+    appSettings: { useGoPersonalSearch: true, gopersonalProjectId: 'proj-1' },
     gopersonalSettings: {
       search: { hits: [], product_ids: ['2', '1'], search_id: 's-1' },
     },

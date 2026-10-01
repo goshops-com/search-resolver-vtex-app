@@ -1,5 +1,5 @@
 {
-  "name": "qacoolboxpe.gopersonal-search-resolver",
+  "name": "gopersonal-search-resolver",
   "scripts": {
     "lint": "tsc --noEmit --pretty",
     "test": "jest"

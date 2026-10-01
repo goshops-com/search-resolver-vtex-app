@@ -8,6 +8,7 @@ describe('fetchAppSettings', () => {
       appSettings: {
         shouldUseNewPDPEndpoint: true,
         shouldUseNewPLPEndpoint: false,
+        useGoPersonalSearch: true,
         gopersonalProjectId: 'proj-1',
       },
     })
@@ -55,13 +56,13 @@ describe('fetchAppSettings', () => {
     })
   })
 
-  it('uses the manifest default when the checkbox was never set', async () => {
+  it('keeps VTEX until the admin ticks GoPersonal, even with a project id', async () => {
     const ctx = createContext({
       appSettings: { gopersonalProjectId: 'proj-1' },
     })
 
     await expect(fetchAppSettings(ctx)).resolves.toMatchObject({
-      searchEngine: 'gopersonal',
+      searchEngine: 'vtex',
     })
   })
 

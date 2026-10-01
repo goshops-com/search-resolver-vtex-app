@@ -105,7 +105,7 @@ describe('fetchFacets service', () => {
   it('builds facets from the catalog when there is a full text query', async () => {
     const ctx = createContext({
       accountName: 'testaccount',
-      appSettings: { gopersonalProjectId: 'proj-1' },
+      appSettings: { useGoPersonalSearch: true, gopersonalProjectId: 'proj-1' },
       gopersonalSettings: {
         search: {
           hits: [],
