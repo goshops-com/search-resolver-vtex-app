@@ -24,10 +24,8 @@ import type { FacetSettings } from './settings'
 import { fetchAppSettings } from './settings'
 import {
   buildFacetsFromProducts,
-  explainFacetExclusions,
   filterProductsBySelectedFacets,
 } from './gopersonalLocalFacets'
-import { debugLog } from './debugLog'
 import { fetchGoPersonalRankedIds } from './gopersonalSearch'
 import { hydrateProductsFromCatalog } from './gopersonalCatalog'
 import {
@@ -541,42 +539,12 @@ async function fetchProductSearchFromGoPersonal(
     filterableFieldIds
   )
 
-  debugLog(ctx, 'gopersonal: conteos', {
-    fullText: args.fullText,
-    salesChannel: args.salesChannel,
-    rankedIds: productIds.length,
-    hydrated: ranked.length,
-    afterFilter: filtered.length,
-    selectedFacets,
-  })
-
-  if (filtered.length !== ranked.length) {
-    debugLog(ctx, 'gopersonal: descartados', {
-      fullText: args.fullText,
-      selectedFacets,
-      excluded: explainFacetExclusions(
-        ranked,
-        selectedFacets,
-        filterableFieldIds
-      ),
-    })
-  }
-
   const from = args.from ?? 0
   const to = args.to ?? from + filtered.length - 1
 
-  const products = filtered.slice(from, to + 1)
-
-  debugLog(ctx, 'gopersonal: salida', {
-    returned: products.length,
-    recordsFiltered: filtered.length,
-    from,
-    to,
-  })
-
   return {
     searchState: args.searchState,
-    products,
+    products: filtered.slice(from, to + 1),
     recordsFiltered: filtered.length,
     searchId,
     facets,
@@ -618,18 +586,8 @@ export async function fetchProductSearch(
   } = await fetchAppSettings(ctx)
 
   const hasFullTextQuery = Boolean(args.fullText?.trim())
-  const usesGoPersonal = hasFullTextQuery && searchEngine === 'gopersonal'
 
-  debugLog(ctx, 'motor elegido', {
-    engine: usesGoPersonal ? 'gopersonal' : 'vtex',
-    searchEngine,
-    hasFullTextQuery,
-    fullText: args.fullText,
-    map: args.map,
-    query: args.query,
-  })
-
-  if (usesGoPersonal) {
+  if (hasFullTextQuery && searchEngine === 'gopersonal') {
     return fetchProductSearchFromGoPersonal(ctx, args, selectedFacets, {
       gopersonalProjectId,
       gopersonalLimit,
