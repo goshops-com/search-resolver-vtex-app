@@ -27,6 +27,7 @@ import {
   filterProductsBySelectedFacets,
 } from './gopersonalLocalFacets'
 import { fetchGoPersonalResultSet } from './gopersonalResultSet'
+import { timed, timedSync } from './timing'
 
 type SegmentData = ReturnType<typeof extractSegmentData>
 
@@ -511,17 +512,17 @@ async function fetchProductSearchFromGoPersonal(
 
   // Facets describe the unfiltered result set so every value stays selectable
   // after the shopper picks one.
-  const facets = buildFacetsFromProducts(
-    ranked,
-    settings.facets,
-    selectedFacets,
-    filterableFieldIds
+  const facets = timedSync(ctx, 'local.buildFacets', () =>
+    buildFacetsFromProducts(
+      ranked,
+      settings.facets,
+      selectedFacets,
+      filterableFieldIds
+    )
   )
 
-  const filtered = filterProductsBySelectedFacets(
-    ranked,
-    selectedFacets,
-    filterableFieldIds
+  const filtered = timedSync(ctx, 'local.filter', () =>
+    filterProductsBySelectedFacets(ranked, selectedFacets, filterableFieldIds)
   )
 
   const from = args.from ?? 0
@@ -568,7 +569,7 @@ export async function fetchProductSearch(
     gopersonalProjectId,
     gopersonalLimit,
     facets,
-  } = await fetchAppSettings(ctx)
+  } = await timed(ctx, 'settings', () => fetchAppSettings(ctx))
 
   const hasFullTextQuery = Boolean(args.fullText?.trim())
 
@@ -600,12 +601,14 @@ export async function fetchProductSearch(
   }
 
   if (shouldUseNewPLPEndpoint) {
-    const result = await fetchProductSearchFromIntsch(
-      ctx,
-      args,
-      selectedFacets,
-      shippingOptions,
-      segmentData
+    const result = await timed(ctx, 'intsch.productSearch', () =>
+      fetchProductSearchFromIntsch(
+        ctx,
+        args,
+        selectedFacets,
+        shippingOptions,
+        segmentData
+      )
     )
 
     logSponsoredProducts(ctx, result)

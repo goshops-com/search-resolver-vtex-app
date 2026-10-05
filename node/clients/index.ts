@@ -6,6 +6,7 @@ import { Rewriter } from './rewriter'
 import { IntelligentSearchApi } from './intelligent-search-api'
 import { Intsch } from './intsch'
 import { GoPersonal } from './gopersonal'
+import { DebugLogger } from './debugLogger'
 
 export class Clients extends IOClients {
   public get search() {
@@ -30,5 +31,9 @@ export class Clients extends IOClients {
 
   public get gopersonal() {
     return this.getOrSet('gopersonal', GoPersonal)
+  }
+
+  public get debugLogger() {
+    return this.getOrSet('debugLogger', DebugLogger)
   }
 }

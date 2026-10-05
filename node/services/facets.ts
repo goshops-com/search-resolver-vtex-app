@@ -14,6 +14,7 @@ import {
   filterProductsBySelectedFacets,
 } from './gopersonalLocalFacets'
 import { fetchGoPersonalResultSet } from './gopersonalResultSet'
+import { timed, timedSync } from './timing'
 
 type SegmentData = ReturnType<typeof extractSegmentData>
 
@@ -103,18 +104,26 @@ async function fetchFacetsFromGoPersonal(
     limit: settings.gopersonalLimit,
   })
 
-  return {
-    facets: buildFacetsFromProducts(
+  const facets = timedSync(ctx, 'local.buildFacets', () =>
+    buildFacetsFromProducts(
       products,
       settings.facets,
       selectedFacets,
       filterableFieldIds
-    ),
-    recordsFiltered: filterProductsBySelectedFacets(
-      products,
-      selectedFacets,
-      filterableFieldIds
-    ).length,
+    )
+  )
+
+  const recordsFiltered = timedSync(
+    ctx,
+    'local.filter',
+    () =>
+      filterProductsBySelectedFacets(products, selectedFacets, filterableFieldIds)
+        .length
+  )
+
+  return {
+    facets,
+    recordsFiltered,
     sampling: false,
     breadcrumb: [],
     // The storefront rebuilds every facet link on top of these, so they must
@@ -133,7 +142,7 @@ async function fetchFacetsFromGoPersonal(
  */
 export async function fetchFacets(ctx: Context, options: FetchFacetsOptions) {
   const { searchEngine, gopersonalProjectId, gopersonalLimit, facets } =
-    await fetchAppSettings(ctx)
+    await timed(ctx, 'settings', () => fetchAppSettings(ctx))
 
   if (options.args.fullText?.trim() && searchEngine === 'gopersonal') {
     return fetchFacetsFromGoPersonal(ctx, options, {
@@ -153,5 +162,7 @@ export async function fetchFacets(ctx: Context, options: FetchFacetsOptions) {
     })
   }
 
-  return fetchFacetsFromIntsch(ctx, options, segmentData)
+  return timed(ctx, 'intsch.facets', () =>
+    fetchFacetsFromIntsch(ctx, options, segmentData)
+  )
 }

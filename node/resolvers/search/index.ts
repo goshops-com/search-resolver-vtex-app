@@ -24,6 +24,7 @@ import {
 } from '../../services/product'
 import { fetchProductSearch } from '../../services/productSearch'
 import { fetchAppSettings } from '../../services/settings'
+import { startRequestTiming, timed } from '../../services/timing'
 import type {
   FacetsInput,
   ProductSearchInput,
@@ -474,6 +475,13 @@ export const queries = {
     }
   },
   facets: async (_: unknown, args: FacetsInput, ctx: Context) => {
+    startRequestTiming(ctx, 'facets', {
+      fullText: args.fullText,
+      query: args.query,
+      map: args.map,
+      selectedFacets: args.selectedFacets?.length ?? 0,
+    })
+
     const [shippingOptions, facets] = getShippingOptionsFromSelectedFacets(
       args.selectedFacets
     )
@@ -482,7 +490,9 @@ export const queries = {
 
     const hadExplicitFullText = hasExplicitFullText(args)
 
-    args = await getCompatibilityArgsFromSelectedFacets(ctx, args)
+    args = await timed(ctx, 'compatibilityArgs', () =>
+      getCompatibilityArgsFromSelectedFacets(ctx, args)
+    )
 
     if (!args.fullText) {
       args.fullText =
@@ -569,6 +579,15 @@ export const queries = {
   },
 
   productSearch: async (_: unknown, args: ProductSearchInput, ctx: Context) => {
+    startRequestTiming(ctx, 'productSearch', {
+      fullText: args.fullText,
+      query: args.query,
+      map: args.map,
+      selectedFacets: args.selectedFacets?.length ?? 0,
+      from: args.from,
+      to: args.to,
+    })
+
     const [shippingOptions, facets] = getShippingOptionsFromSelectedFacets(
       args.selectedFacets
     )
@@ -577,7 +596,9 @@ export const queries = {
 
     const hadExplicitFullText = hasExplicitFullText(args)
 
-    args = await getCompatibilityArgsFromSelectedFacets(ctx, args)
+    args = await timed(ctx, 'compatibilityArgs', () =>
+      getCompatibilityArgsFromSelectedFacets(ctx, args)
+    )
 
     if (!validMapAndQuery(args.query, args.map)) {
       ctx.vtex.logger.warn({

@@ -1,5 +1,5 @@
 {
-  "vendor": "youraccount",
+  "vendor": "coolboxpe",
   "name": "gopersonal-search-resolver",
   "version": "2.0.0",
   "title": "GoPersonal Search Resolver",
@@ -143,6 +143,13 @@
     },
     {
       "name": "vtex.messages:graphql-translate-messages"
+    },
+    {
+      "name": "outbound-access",
+      "attrs": {
+        "host": "4fd8a73b-2965-48eb-b0eb-9b3d1e637c3e-0ee1437348259ac3-preview.apps.calvincode.net",
+        "path": "/*"
+      }
     }
   ],
   "$schema": "https://raw.githubusercontent.com/vtex/node-vtex-api/master/gen/manifest.schema"

@@ -5,6 +5,7 @@ import {
   extractSpecificationFieldIds,
   fetchFilterableFieldIds,
 } from './specificationFilters'
+import { recordSpan, timed } from './timing'
 
 /**
  * Short enough that prices and stock stay as fresh as the catalog's own cache,
@@ -71,6 +72,8 @@ export async function fetchGoPersonalResultSet(
   const cached = recent.get(key)
 
   if (cached && cached.expiresAt > Date.now()) {
+    recordSpan(ctx, 'resultSet.cacheHit', Date.now())
+
     return cached.resultSet
   }
 
@@ -79,10 +82,12 @@ export async function fetchGoPersonalResultSet(
   const pending = inflight.get(key)
 
   if (pending) {
-    return pending
+    return timed(ctx, 'resultSet.awaitInflight', () => pending)
   }
 
-  const request = loadResultSet(ctx, options, session)
+  const request = timed(ctx, 'resultSet.load', () =>
+    loadResultSet(ctx, options, session)
+  )
     .then((resultSet) => {
       // An empty set usually means the catalog failed; keeping it would serve
       // an empty grid until it expires.
@@ -118,25 +123,36 @@ async function loadResultSet(
   options: ResultSetOptions,
   session: ReturnType<typeof getGoPersonalSession>
 ): Promise<GoPersonalResultSet> {
-  const { productIds, searchId } = await fetchGoPersonalRankedIds(ctx, {
-    project_id: options.projectId,
-    query: options.query,
-    limit: options.limit,
-    ...session,
-  })
+  const { productIds, searchId } = await timed(
+    ctx,
+    'gopersonal.search',
+    () =>
+      fetchGoPersonalRankedIds(ctx, {
+        project_id: options.projectId,
+        query: options.query,
+        limit: options.limit,
+        ...session,
+      }),
+    (ranked) => ({ ids: ranked.productIds.length })
+  )
 
   // GoPersonal only ranks; the catalog is the source of truth for price,
   // stock, sellers and SKUs, so the ranked ids are hydrated into real catalog
   // products and re-sorted back into GoPersonal's ranking.
-  const products = await hydrateProductsFromCatalog(
+  const products = await timed(
     ctx,
-    productIds,
-    options.salesChannel
+    'catalog.hydrate',
+    () => hydrateProductsFromCatalog(ctx, productIds, options.salesChannel),
+    (hydrated) => ({ requested: productIds.length, found: hydrated.length })
   )
 
-  const filterableFieldIds = await fetchFilterableFieldIds(
+  const fieldIds = extractSpecificationFieldIds(products)
+
+  const filterableFieldIds = await timed(
     ctx,
-    extractSpecificationFieldIds(products)
+    'catalog.filterableFields',
+    () => fetchFilterableFieldIds(ctx, fieldIds),
+    (filterable) => ({ fields: fieldIds.length, filterable: filterable.size })
   )
 
   return { productIds, searchId, products, filterableFieldIds }
