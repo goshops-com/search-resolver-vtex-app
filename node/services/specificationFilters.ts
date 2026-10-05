@@ -1,3 +1,4 @@
+import { debugLog } from './debugLog'
 import { timed } from './timing'
 
 const SPECIFICATION_FIELD_BUCKET = 'specification-field'
@@ -37,7 +38,16 @@ export async function fetchFilterableFieldIds(
             FILTERABLE_FIELDS_FILE,
             true
           )
-          .catch(() => null),
+          .catch((error) => {
+            debugLog(
+              ctx,
+              'vbase:filterableFields:readFailed',
+              { error: error?.message, status: error?.response?.status },
+              'error'
+            )
+
+            return null
+          }),
       (map) => ({ knownFields: map ? Object.keys(map).length : 0 })
     )) ?? {}
 
@@ -66,9 +76,30 @@ export async function fetchFilterableFieldIds(
 
     // The next request should not pay for these fields again; a failed write
     // only costs a repeated lookup.
+    const saveStarted = Date.now()
+
     vbase
       .saveJSON(SPECIFICATION_FIELD_BUCKET, FILTERABLE_FIELDS_FILE, known)
-      .catch(() => null)
+      .then(() =>
+        debugLog(ctx, 'vbase:filterableFields:saved', {
+          fields: Object.keys(known).length,
+          durationMs: Date.now() - saveStarted,
+        })
+      )
+      .catch((error) =>
+        debugLog(
+          ctx,
+          'vbase:filterableFields:saveFailed',
+          {
+            fields: Object.keys(known).length,
+            durationMs: Date.now() - saveStarted,
+            error: error?.message,
+            status: error?.response?.status,
+            data: error?.response?.data,
+          },
+          'error'
+        )
+      )
   }
 
   return fieldIds.reduce<Set<string>>((filterable, fieldId) => {
