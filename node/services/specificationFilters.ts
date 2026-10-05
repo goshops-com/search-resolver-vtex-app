@@ -1,3 +1,5 @@
+import { timed } from './timing'
+
 const SPECIFICATION_FIELD_BUCKET = 'specification-field'
 const FILTERABLE_FIELDS_FILE = 'filterable.json'
 
@@ -25,22 +27,36 @@ export async function fetchFilterableFieldIds(
   const { vbase, search } = ctx.clients
 
   const known =
-    (await vbase
-      .getJSON<FilterableFieldMap>(
-        SPECIFICATION_FIELD_BUCKET,
-        FILTERABLE_FIELDS_FILE,
-        true
-      )
-      .catch(() => null)) ?? {}
+    (await timed(
+      ctx,
+      'vbase.filterableFields',
+      () =>
+        vbase
+          .getJSON<FilterableFieldMap>(
+            SPECIFICATION_FIELD_BUCKET,
+            FILTERABLE_FIELDS_FILE,
+            true
+          )
+          .catch(() => null),
+      (map) => ({ knownFields: map ? Object.keys(map).length : 0 })
+    )) ?? {}
 
   const unknownIds = fieldIds.filter((fieldId) => !(fieldId in known))
 
-  const resolved = await Promise.all(
-    unknownIds.map(async (fieldId) => {
-      const field = await search.specificationField(fieldId).catch(() => null)
+  const resolved = await timed(
+    ctx,
+    'catalog.unknownFields',
+    () =>
+      Promise.all(
+        unknownIds.map(async (fieldId) => {
+          const field = await search
+            .specificationField(fieldId)
+            .catch(() => null)
 
-      return Boolean(field?.IsFilter && field.IsActive)
-    })
+          return Boolean(field?.IsFilter && field.IsActive)
+        })
+      ),
+    () => ({ unknown: unknownIds.length })
   )
 
   if (unknownIds.length > 0) {
