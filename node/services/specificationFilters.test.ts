@@ -1,4 +1,5 @@
 import {
+  clearKnownFieldsCache,
   extractSpecificationFieldIds,
   fetchFilterableFieldIds,
 } from './specificationFilters'
@@ -44,6 +45,10 @@ describe('extractSpecificationFieldIds', () => {
 })
 
 describe('fetchFilterableFieldIds', () => {
+  beforeEach(() => {
+    clearKnownFieldsCache()
+  })
+
   it('keeps only the active filterable fields', async () => {
     const ctx = contextWith({
       '1': { IsFilter: true, IsActive: true },
@@ -90,5 +95,29 @@ describe('fetchFilterableFieldIds', () => {
       expect.any(String),
       { '1': false, '2': true }
     )
+  })
+
+  it('keeps the bucket name within the VBase limit', async () => {
+    const ctx = contextWith({ '1': { IsFilter: true, IsActive: true } })
+
+    await fetchFilterableFieldIds(ctx, ['1'])
+
+    const [bucket] = ctx.clients.vbase.saveJSON.mock.calls[0]
+
+    // VBase prefixes `vendor.app-name.` and caps the whole name at 50.
+    expect(
+      `youraccount.gopersonal-search-resolver.${bucket}`.length
+    ).toBeLessThanOrEqual(50)
+  })
+
+  it('answers later searches from memory without reading VBase again', async () => {
+    const ctx = contextWith({ '1': { IsFilter: true, IsActive: true } })
+
+    await fetchFilterableFieldIds(ctx, ['1'])
+    const result = await fetchFilterableFieldIds(ctx, ['1'])
+
+    expect(Array.from(result)).toEqual(['1'])
+    expect(ctx.clients.vbase.getJSON).toHaveBeenCalledTimes(1)
+    expect(ctx.clients.search.specificationField).toHaveBeenCalledTimes(1)
   })
 })

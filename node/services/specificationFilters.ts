@@ -1,10 +1,23 @@
 import { debugLog } from './debugLog'
 import { timed } from './timing'
 
-const SPECIFICATION_FIELD_BUCKET = 'specification-field'
+/**
+ * VBase prefixes the bucket with `vendor.app-name.` and rejects names over 50
+ * characters: `specification-field` overflowed it, so the map was never saved
+ * and every search looked every field up again.
+ */
+const SPECIFICATION_FIELD_BUCKET = 'fields'
 const FILTERABLE_FIELDS_FILE = 'filterable.json'
 
 type FilterableFieldMap = Record<string, boolean>
+
+/**
+ * Field flags change only when the catalog is reconfigured, so each worker
+ * keeps the map it last read or wrote and skips VBase on later searches.
+ */
+const KNOWN_FIELDS_TTL_MS = 10 * 60 * 1000
+
+let knownFields: { map: FilterableFieldMap; expiresAt: number } | null = null
 
 /**
  * Resolves which specifications the catalog is configured to filter by.
@@ -27,7 +40,11 @@ export async function fetchFilterableFieldIds(
 ): Promise<Set<string>> {
   const { vbase, search } = ctx.clients
 
+  const memory =
+    knownFields && knownFields.expiresAt > Date.now() ? knownFields.map : null
+
   const known =
+    memory ??
     (await timed(
       ctx,
       'vbase.filterableFields',
@@ -53,6 +70,10 @@ export async function fetchFilterableFieldIds(
 
   const unknownIds = fieldIds.filter((fieldId) => !(fieldId in known))
 
+  if (memory && unknownIds.length === 0) {
+    return pickFilterable(known, fieldIds)
+  }
+
   const resolved = await timed(
     ctx,
     'catalog.unknownFields',
@@ -68,6 +89,10 @@ export async function fetchFilterableFieldIds(
       ),
     () => ({ unknown: unknownIds.length })
   )
+
+  if (!memory || unknownIds.length > 0) {
+    knownFields = { map: known, expiresAt: Date.now() + KNOWN_FIELDS_TTL_MS }
+  }
 
   if (unknownIds.length > 0) {
     unknownIds.forEach((fieldId, index) => {
@@ -102,6 +127,10 @@ export async function fetchFilterableFieldIds(
       )
   }
 
+  return pickFilterable(known, fieldIds)
+}
+
+function pickFilterable(known: FilterableFieldMap, fieldIds: string[]) {
   return fieldIds.reduce<Set<string>>((filterable, fieldId) => {
     if (known[fieldId]) {
       filterable.add(fieldId)
@@ -109,6 +138,11 @@ export async function fetchFilterableFieldIds(
 
     return filterable
   }, new Set())
+}
+
+/** Tests resolve different flags for the same field ids. */
+export function clearKnownFieldsCache() {
+  knownFields = null
 }
 
 export function extractSpecificationFieldIds(
