@@ -27,7 +27,7 @@ import {
   filterProductsBySelectedFacets,
 } from './gopersonalLocalFacets'
 import { fetchGoPersonalResultSet } from './gopersonalResultSet'
-import { timed, timedSync } from './timing'
+import { recordSpan, timed, timedSync } from './timing'
 
 type SegmentData = ReturnType<typeof extractSegmentData>
 
@@ -527,10 +527,17 @@ async function fetchProductSearchFromGoPersonal(
 
   const from = args.from ?? 0
   const to = args.to ?? from + filtered.length - 1
+  const page = filtered.slice(from, to + 1)
+
+  recordSpan(ctx, 'local.page', Date.now(), {
+    hydrated: ranked.length,
+    recordsFiltered: filtered.length,
+    returned: page.length,
+  })
 
   return {
     searchState: args.searchState,
-    products: filtered.slice(from, to + 1),
+    products: page,
     recordsFiltered: filtered.length,
     searchId,
     facets,

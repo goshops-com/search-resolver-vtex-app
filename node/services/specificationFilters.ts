@@ -1,5 +1,5 @@
 import { debugLog } from './debugLog'
-import { timed } from './timing'
+import { recordSpan, timed } from './timing'
 
 /**
  * VBase prefixes the bucket with `vendor.app-name.` and rejects names over 50
@@ -69,6 +69,12 @@ export async function fetchFilterableFieldIds(
     )) ?? {}
 
   const unknownIds = fieldIds.filter((fieldId) => !(fieldId in known))
+
+  if (memory) {
+    recordSpan(ctx, 'filterableFields.memoryHit', Date.now(), {
+      knownFields: Object.keys(memory).length,
+    })
+  }
 
   if (memory && unknownIds.length === 0) {
     return pickFilterable(known, fieldIds)

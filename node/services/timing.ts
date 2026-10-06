@@ -15,6 +15,14 @@ type RequestTimings = {
 const timingsByContext = new WeakMap<Context, RequestTimings>()
 
 /**
+ * Identifies the worker process behind each log, so a baseline can tell a
+ * request answered by a freshly started process (empty in-memory caches) from
+ * one answered by a warm worker, and spot every restart of the linked app.
+ */
+const bootId = Math.random().toString(36).slice(2, 10)
+const bootedAt = Date.now()
+
+/**
  * Temporary instrumentation for the latency investigation: collects how long
  * each stage of a search takes and ships them as one log once the response has
  * been written, so the gap between the last stage and the flush shows what
@@ -33,14 +41,24 @@ export function startRequestTiming(
 
   timingsByContext.set(ctx, timings)
 
+  // Lets the baseline script tie a log to the browser run that caused it,
+  // when the header survives the router (the segment route strips cookies).
+  const perfRun = ctx.get?.('x-perf-run') || undefined
+
   const flush = () => {
     const totalMs = Date.now() - timings.startedAt
 
     debugLog(ctx, `timing:${operation}`, {
       ...context,
+      ...(perfRun ? { perfRun } : {}),
       totalMs,
       responseBytes: bodyBytes(ctx),
       spans: timings.spans,
+      worker: {
+        bootId,
+        pid: process.pid,
+        uptimeMs: Date.now() - bootedAt,
+      },
     })
   }
 
