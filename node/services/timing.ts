@@ -21,6 +21,7 @@ const timingsByContext = new WeakMap<Context, RequestTimings>()
  */
 const bootId = Math.random().toString(36).slice(2, 10)
 const bootedAt = Date.now()
+let requestsSinceBoot = 0
 
 /**
  * Temporary instrumentation for the latency investigation: collects how long
@@ -38,6 +39,7 @@ export function startRequestTiming(
   }
 
   const timings: RequestTimings = { startedAt: Date.now(), spans: [] }
+  const requestNumber = ++requestsSinceBoot
 
   timingsByContext.set(ctx, timings)
 
@@ -58,6 +60,7 @@ export function startRequestTiming(
         bootId,
         pid: process.pid,
         uptimeMs: Date.now() - bootedAt,
+        requestNumber,
       },
     })
   }
