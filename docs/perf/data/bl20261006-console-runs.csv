@@ -1,0 +1,40 @@
+round,roundStartedAt,warmup,term,condition,slot,outcome,productsVisibleMs,error
+1,2026-10-06T17:52:41.070Z,True,jbl,first,A,success,19203.2,
+1,2026-10-06T17:52:41.070Z,True,jbl,repeat,B,success,7630.4,
+1,2026-10-06T17:52:41.070Z,True,jbl,page2,A,success,5473.9,
+1,2026-10-06T17:52:41.070Z,True,jbl,filter,B,success,1885.3,
+1,2026-10-06T17:52:41.070Z,True,jbl,prep,C,success,13617.5,
+1,2026-10-06T17:52:41.070Z,True,jbl,prep,D,success,11687.8,
+1,2026-10-06T17:52:41.070Z,True,audifonos,first,A,success,11155,
+1,2026-10-06T17:52:41.070Z,True,audifonos,repeat,B,success,10556.4,
+1,2026-10-06T17:52:41.070Z,True,audifonos,filter,B,success,6595,
+1,2026-10-06T17:52:41.070Z,True,audifonos,prep,C,success,6495.5,
+1,2026-10-06T17:52:41.070Z,True,audifonos,prep,D,success,26812.5,
+1,2026-10-06T17:52:41.070Z,True,smart-tv,first,A,success,21912.4,
+1,2026-10-06T17:52:41.070Z,True,smart-tv,repeat,B,success,14107.6,
+1,2026-10-06T17:52:41.070Z,True,smart-tv,page2,A,success,11282.4,
+1,2026-10-06T17:52:41.070Z,True,smart-tv,filter,B,success,1610.9,
+1,2026-10-06T17:52:41.070Z,True,smart-tv,prep,C,success,18559.7,
+1,2026-10-06T17:52:41.070Z,True,smart-tv,prep,D,success,15756.9,
+1,2026-10-06T17:52:41.070Z,True,jbl,page2-nocache,C,success,11235.3,
+1,2026-10-06T17:52:41.070Z,True,smart-tv,page2-nocache,C,success,11772.3,
+1,2026-10-06T17:52:41.070Z,True,jbl,filter-nocache,D,error,,productSearchV3 504 Request failed with status code 504 (client)
+1,2026-10-06T17:52:41.070Z,True,audifonos,filter-nocache,D,error,,productSearchV3 500 Request failed with status code 500 (client)
+1,2026-10-06T17:52:41.070Z,True,smart-tv,filter-nocache,D,success,10998,
+1,2026-10-06T17:52:41.070Z,True,jbl,direct-nocache,E,success,19190.4,
+1,2026-10-06T17:52:41.070Z,True,jbl,direct-cache,E,success,16141.2,
+1,2026-10-06T17:52:41.070Z,True,audifonos,direct-nocache,E,timeout,,timeout waiting for products on direct load
+1,2026-10-06T17:52:41.070Z,True,audifonos,direct-cache,E,timeout,,timeout waiting for products on direct load
+1,2026-10-06T17:52:41.070Z,True,smart-tv,direct-nocache,E,success,16232.7,
+1,2026-10-06T17:52:41.070Z,True,smart-tv,direct-cache,E,timeout,,timeout waiting for products on direct load
+2,2026-10-06T18:06:47.628Z,False,jbl,first,A,success,10183.8,
+2,2026-10-06T18:06:47.628Z,False,jbl,repeat,B,error,,productSearchV3 504 Request failed with status code 504 (client)
+2,2026-10-06T18:06:47.628Z,False,jbl,page2,A,error,,productSearchV3 504 Request failed with status code 504 (client)
+2,2026-10-06T18:06:47.628Z,False,jbl,filter,B,skipped,,"prior step ""repeat"" did not succeed in this context"
+2,2026-10-06T18:06:47.628Z,False,jbl,prep,C,error,,productSearchV3 500 Request failed with status code 500 (client)
+2,2026-10-06T18:06:47.628Z,False,jbl,prep,D,error,,productSearchV3 500 Request failed with status code 500 (client)
+2,2026-10-06T18:06:47.628Z,False,audifonos,first,A,success,12935.1,
+2,2026-10-06T18:06:47.628Z,False,audifonos,repeat,B,success,6820.2,
+2,2026-10-06T18:06:47.628Z,False,audifonos,filter,B,success,6521.6,
+2,2026-10-06T18:06:47.628Z,False,audifonos,prep,C,success,5369.5,
+2,2026-10-06T18:06:47.628Z,False,audifonos,prep,D,success,7384.8,

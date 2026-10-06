@@ -1,0 +1,73 @@
+{
+  "campaign": "smoke2",
+  "startedAt": "2026-10-06T17:16:54.299Z",
+  "baseUrl": "https://buscador--coolboxpe.myvtex.com",
+  "browser": "chromium 155.0.8059.12 headless",
+  "playwright": "1.64.0-alpha-1790635538000",
+  "node": "v24.14.0",
+  "iterations": 1,
+  "warmups": 0,
+  "terms": [
+    {
+      "id": "jbl",
+      "term": "jbl",
+      "path": "/jbl?_q=jbl&map=ft",
+      "expectedRoute": "marca (map=b, sin fullText)",
+      "paginate": true,
+      "filter": {
+        "inputId": "category-2-parlantes",
+        "key": "category-2",
+        "value": "parlantes",
+        "check": "category"
+      }
+    },
+    {
+      "id": "audifonos",
+      "term": "audifonos",
+      "path": "/audifonos?_q=audifonos&map=ft",
+      "expectedRoute": "texto (map=ft, fullText=audifonos)",
+      "paginate": false,
+      "filter": {
+        "inputId": "brand-jbl",
+        "key": "brand",
+        "value": "jbl",
+        "check": "brand"
+      }
+    },
+    {
+      "id": "smart-tv",
+      "term": "smart tv",
+      "path": "/smart%20tv?_q=smart%20tv&map=ft",
+      "expectedRoute": "texto (map=ft, fullText=smart tv)",
+      "paginate": true,
+      "filter": {
+        "inputId": "brand-samsung",
+        "key": "brand",
+        "value": "samsung",
+        "check": "brand"
+      }
+    }
+  ],
+  "conditions": null,
+  "config": {
+    "baseUrl": "https://buscador--coolboxpe.myvtex.com",
+    "account": "coolboxpe",
+    "loggerUrl": "http://4fd8a73b-2965-48eb-b0eb-9b3d1e637c3e-0ee1437348259ac3-preview.apps.calvincode.net",
+    "viewport": {
+      "width": 1366,
+      "height": 900
+    },
+    "iterations": 31,
+    "warmupIterations": 1,
+    "timeouts": {
+      "homeMs": 90000,
+      "spaStepMs": 60000,
+      "navigationMs": 90000
+    },
+    "resultSetTtlMs": 30000,
+    "cacheExpiryWaitMs": 35000,
+    "maxCachedAgeMs": 27000,
+    "concurrency": 1
+  },
+  "finishedAt": "2026-10-06T17:29:33.698Z"
+}

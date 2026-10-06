@@ -1,0 +1,2693 @@
+{
+  "campaign": "smoke3",
+  "startedAt": "2026-10-06T17:32:16.652Z",
+  "finishedAt": "2026-10-06T17:40:42.154Z",
+  "percentileMethod": "linear interpolation between closest ranks (R-7, numpy default, Excel PERCENTILE.INC)",
+  "restartWindow": {
+    "fromMs": 15000,
+    "toMs": 50000
+  },
+  "restartsDuringCampaign": 8,
+  "logs": {
+    "timing": 150,
+    "withPerfRun": 116,
+    "withoutPerfRunAttributedByTime": 34,
+    "withoutPerfRunUnattributed": 0
+  },
+  "prepSteps": {
+    "success": 6
+  },
+  "groups": [
+    {
+      "term": "jbl",
+      "condition": "first",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "pickRuntime": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 12236,
+          "p90": 12236,
+          "mean": 12236,
+          "min": 12236,
+          "max": 12236
+        }
+      }
+    },
+    {
+      "term": "jbl",
+      "condition": "repeat",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "hit": 1
+      },
+      "productsSource": {
+        "pickRuntime": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 7431,
+          "p90": 7431,
+          "mean": 7431,
+          "min": 7431,
+          "max": 7431
+        }
+      }
+    },
+    {
+      "term": "jbl",
+      "condition": "page2",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "hit": 1
+      },
+      "productsSource": {
+        "client": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 7155,
+          "p90": 7155,
+          "mean": 7155,
+          "min": 7155,
+          "max": 7155
+        }
+      }
+    },
+    {
+      "term": "jbl",
+      "condition": "filter",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "hit": 1
+      },
+      "productsSource": {
+        "client": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 1444,
+          "p90": 1444,
+          "mean": 1444,
+          "min": 1444,
+          "max": 1444
+        }
+      }
+    },
+    {
+      "term": "audifonos",
+      "condition": "first",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "pickRuntime": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 11429,
+          "p90": 11429,
+          "mean": 11429,
+          "min": 11429,
+          "max": 11429
+        }
+      }
+    },
+    {
+      "term": "audifonos",
+      "condition": "repeat",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "client": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 8589,
+          "p90": 8589,
+          "mean": 8589,
+          "min": 8589,
+          "max": 8589
+        }
+      }
+    },
+    {
+      "term": "audifonos",
+      "condition": "filter",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "hit": 1
+      },
+      "productsSource": {
+        "client": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 6979,
+          "p90": 6979,
+          "mean": 6979,
+          "min": 6979,
+          "max": 6979
+        }
+      }
+    },
+    {
+      "term": "smart-tv",
+      "condition": "first",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "clean": 1
+      },
+      "invalidReasons": {},
+      "errorRate": 0,
+      "errorRateOutsideRestarts": 0,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "pickRuntime": 1
+      },
+      "visible": [
+        48
+      ],
+      "recordsFiltered": [
+        107
+      ],
+      "hydrated": [
+        107
+      ],
+      "requestedFromGP": [
+        107
+      ],
+      "knownFieldsSource": {
+        "memory": 1
+      },
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 11163,
+          "p90": 11163,
+          "mean": 11163,
+          "min": 11163,
+          "max": 11163
+        },
+        "counterSettledMs": {
+          "n": 1,
+          "median": 11163,
+          "p90": 11163,
+          "mean": 11163,
+          "min": 11163,
+          "max": 11163
+        },
+        "responseEndMs": {
+          "n": 1,
+          "median": 3840,
+          "p90": 3840,
+          "mean": 3840,
+          "min": 3840,
+          "max": 3840
+        },
+        "productSearchMs": {
+          "n": 1,
+          "median": 1022,
+          "p90": 1022,
+          "mean": 1022,
+          "min": 1022,
+          "max": 1022
+        },
+        "facetsMs": {
+          "n": 1,
+          "median": 493,
+          "p90": 493,
+          "mean": 493,
+          "min": 493,
+          "max": 493
+        },
+        "pickRuntimeMs": {
+          "n": 1,
+          "median": 3715,
+          "p90": 3715,
+          "mean": 3715,
+          "min": 3715,
+          "max": 3715
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 1,
+          "median": 252,
+          "p90": 252,
+          "mean": 252,
+          "min": 252,
+          "max": 252
+        },
+        "resolverFacetsMs": {
+          "n": 1,
+          "median": 80,
+          "p90": 80,
+          "mean": 80,
+          "min": 80,
+          "max": 80
+        },
+        "resolverLoadTotalMs": {
+          "n": 1,
+          "median": 2439,
+          "p90": 2439,
+          "mean": 2439,
+          "min": 2439,
+          "max": 2439
+        },
+        "resultSetLoadMs": {
+          "n": 1,
+          "median": 2114,
+          "p90": 2114,
+          "mean": 2114,
+          "min": 2114,
+          "max": 2114
+        },
+        "filterableFieldsMs": {
+          "n": 1,
+          "median": 1,
+          "p90": 1,
+          "mean": 1,
+          "min": 1,
+          "max": 1
+        },
+        "resolverCalls": {
+          "n": 1,
+          "median": 9,
+          "p90": 9,
+          "mean": 9,
+          "min": 9,
+          "max": 9
+        },
+        "gopersonalMs": {
+          "n": 1,
+          "median": 1361,
+          "p90": 1361,
+          "mean": 1361,
+          "min": 1361,
+          "max": 1361
+        },
+        "hydrateMs": {
+          "n": 1,
+          "median": 752,
+          "p90": 752,
+          "mean": 752,
+          "min": 752,
+          "max": 752
+        },
+        "batchMaxMs": {
+          "n": 1,
+          "median": 749,
+          "p90": 749,
+          "mean": 749,
+          "min": 749,
+          "max": 749
+        },
+        "batchMinMs": {
+          "n": 1,
+          "median": 315,
+          "p90": 315,
+          "mean": 315,
+          "min": 315,
+          "max": 315
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 1,
+          "median": 53,
+          "p90": 53,
+          "mean": 53,
+          "min": 53,
+          "max": 53
+        },
+        "filterMs": {
+          "n": 1,
+          "median": 0,
+          "p90": 0,
+          "mean": 0,
+          "min": 0,
+          "max": 0
+        },
+        "awaitInflightMs": {
+          "n": 1,
+          "median": 2114,
+          "p90": 2114,
+          "mean": 2114,
+          "min": 2114,
+          "max": 2114
+        },
+        "settingsMs": {
+          "n": 1,
+          "median": 7,
+          "p90": 7,
+          "mean": 7,
+          "min": 7,
+          "max": 7
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 11163,
+          "p90": 11163,
+          "mean": 11163,
+          "min": 11163,
+          "max": 11163
+        }
+      }
+    },
+    {
+      "term": "smart-tv",
+      "condition": "repeat",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "clean": 1
+      },
+      "invalidReasons": {},
+      "errorRate": 0,
+      "errorRateOutsideRestarts": 0,
+      "observedCache": {
+        "hit": 1
+      },
+      "productsSource": {
+        "pickRuntime": 1
+      },
+      "visible": [
+        48
+      ],
+      "recordsFiltered": [
+        107
+      ],
+      "hydrated": [
+        107
+      ],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 9797,
+          "p90": 9797,
+          "mean": 9797,
+          "min": 9797,
+          "max": 9797
+        },
+        "counterSettledMs": {
+          "n": 1,
+          "median": 9797,
+          "p90": 9797,
+          "mean": 9797,
+          "min": 9797,
+          "max": 9797
+        },
+        "responseEndMs": {
+          "n": 1,
+          "median": 1469,
+          "p90": 1469,
+          "mean": 1469,
+          "min": 1469,
+          "max": 1469
+        },
+        "productSearchMs": {
+          "n": 1,
+          "median": 1288,
+          "p90": 1288,
+          "mean": 1288,
+          "min": 1288,
+          "max": 1288
+        },
+        "facetsMs": {
+          "n": 1,
+          "median": 509,
+          "p90": 509,
+          "mean": 509,
+          "min": 509,
+          "max": 509
+        },
+        "pickRuntimeMs": {
+          "n": 1,
+          "median": 1353,
+          "p90": 1353,
+          "mean": 1353,
+          "min": 1353,
+          "max": 1353
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 1,
+          "median": 58,
+          "p90": 58,
+          "mean": 58,
+          "min": 58,
+          "max": 58
+        },
+        "resolverFacetsMs": {
+          "n": 1,
+          "median": 78,
+          "p90": 78,
+          "mean": 78,
+          "min": 78,
+          "max": 78
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 1,
+          "median": 7,
+          "p90": 7,
+          "mean": 7,
+          "min": 7,
+          "max": 7
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 1,
+          "median": 52,
+          "p90": 52,
+          "mean": 52,
+          "min": 52,
+          "max": 52
+        },
+        "filterMs": {
+          "n": 1,
+          "median": 0,
+          "p90": 0,
+          "mean": 0,
+          "min": 0,
+          "max": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 1,
+          "median": 5,
+          "p90": 5,
+          "mean": 5,
+          "min": 5,
+          "max": 5
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 9797,
+          "p90": 9797,
+          "mean": 9797,
+          "min": 9797,
+          "max": 9797
+        }
+      }
+    },
+    {
+      "term": "smart-tv",
+      "condition": "page2",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "hit": 1
+      },
+      "productsSource": {
+        "client": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 7783,
+          "p90": 7783,
+          "mean": 7783,
+          "min": 7783,
+          "max": 7783
+        }
+      }
+    },
+    {
+      "term": "smart-tv",
+      "condition": "filter",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "client": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 7259,
+          "p90": 7259,
+          "mean": 7259,
+          "min": 7259,
+          "max": 7259
+        }
+      }
+    },
+    {
+      "term": "jbl",
+      "condition": "page2-nocache",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "client": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 12857,
+          "p90": 12857,
+          "mean": 12857,
+          "min": 12857,
+          "max": 12857
+        }
+      }
+    },
+    {
+      "term": "smart-tv",
+      "condition": "page2-nocache",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "client": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 11258,
+          "p90": 11258,
+          "mean": 11258,
+          "min": 11258,
+          "max": 11258
+        }
+      }
+    },
+    {
+      "term": "jbl",
+      "condition": "filter-nocache",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "cold-process": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "client": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 8340,
+          "p90": 8340,
+          "mean": 8340,
+          "min": 8340,
+          "max": 8340
+        }
+      }
+    },
+    {
+      "term": "audifonos",
+      "condition": "filter-nocache",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "client": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 5947,
+          "p90": 5947,
+          "mean": 5947,
+          "min": 5947,
+          "max": 5947
+        }
+      }
+    },
+    {
+      "term": "smart-tv",
+      "condition": "filter-nocache",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "client": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 3260,
+          "p90": 3260,
+          "mean": 3260,
+          "min": 3260,
+          "max": 3260
+        }
+      }
+    },
+    {
+      "term": "jbl",
+      "condition": "direct-nocache",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "undefined": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 18624,
+          "p90": 18624,
+          "mean": 18624,
+          "min": 18624,
+          "max": 18624
+        }
+      }
+    },
+    {
+      "term": "jbl",
+      "condition": "direct-cache",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "undefined": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 18217,
+          "p90": 18217,
+          "mean": 18217,
+          "min": 18217,
+          "max": 18217
+        }
+      }
+    },
+    {
+      "term": "audifonos",
+      "condition": "direct-nocache",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "undefined": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 12530,
+          "p90": 12530,
+          "mean": 12530,
+          "min": 12530,
+          "max": 12530
+        }
+      }
+    },
+    {
+      "term": "audifonos",
+      "condition": "direct-cache",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "hit": 1
+      },
+      "productsSource": {
+        "undefined": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 9864,
+          "p90": 9864,
+          "mean": 9864,
+          "min": 9864,
+          "max": 9864
+        }
+      }
+    },
+    {
+      "term": "smart-tv",
+      "condition": "direct-nocache",
+      "attempts": 1,
+      "outcomes": {
+        "timeout": 1
+      },
+      "status": {
+        "timeout": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 1,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {},
+      "productsSource": {},
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 0
+        }
+      }
+    },
+    {
+      "term": "smart-tv",
+      "condition": "direct-cache",
+      "attempts": 1,
+      "outcomes": {
+        "success": 1
+      },
+      "status": {
+        "invalid": 1
+      },
+      "invalidReasons": {
+        "restart-window": 1
+      },
+      "errorRate": 0,
+      "errorRateOutsideRestarts": null,
+      "observedCache": {
+        "miss": 1
+      },
+      "productsSource": {
+        "undefined": 1
+      },
+      "visible": [],
+      "recordsFiltered": [],
+      "hydrated": [],
+      "requestedFromGP": [],
+      "knownFieldsSource": {},
+      "unknownFields": [],
+      "filterCorrect": {},
+      "pageCorrect": {},
+      "clean": {
+        "productsVisibleMs": {
+          "n": 0
+        },
+        "counterSettledMs": {
+          "n": 0
+        },
+        "responseEndMs": {
+          "n": 0
+        },
+        "productSearchMs": {
+          "n": 0
+        },
+        "facetsMs": {
+          "n": 0
+        },
+        "pickRuntimeMs": {
+          "n": 0
+        },
+        "ttfbMs": {
+          "n": 0
+        },
+        "htmlReceivedMs": {
+          "n": 0
+        },
+        "resolverProductSearchMs": {
+          "n": 0
+        },
+        "resolverFacetsMs": {
+          "n": 0
+        },
+        "resolverLoadTotalMs": {
+          "n": 0
+        },
+        "resultSetLoadMs": {
+          "n": 0
+        },
+        "filterableFieldsMs": {
+          "n": 0
+        },
+        "resolverCalls": {
+          "n": 0
+        },
+        "gopersonalMs": {
+          "n": 0
+        },
+        "hydrateMs": {
+          "n": 0
+        },
+        "batchMaxMs": {
+          "n": 0
+        },
+        "batchMinMs": {
+          "n": 0
+        },
+        "vbaseMs": {
+          "n": 0
+        },
+        "unknownFieldsMs": {
+          "n": 0
+        },
+        "buildFacetsMs": {
+          "n": 0
+        },
+        "filterMs": {
+          "n": 0
+        },
+        "awaitInflightMs": {
+          "n": 0
+        },
+        "settingsMs": {
+          "n": 0
+        }
+      },
+      "allSuccesses": {
+        "productsVisibleMs": {
+          "n": 1,
+          "median": 21954,
+          "p90": 21954,
+          "mean": 21954,
+          "min": 21954,
+          "max": 21954
+        }
+      }
+    }
+  ]
+}
