@@ -40,10 +40,44 @@ function buildMetadata(product) {
     return metadata;
 }
 
-function transformProducts(products) {
+// Datos de VTEX que transformProduct no reenvía y que hacen falta para
+// renderizar el producto sin volver a pedírselo a VTEX.
+function buildVtexFields(raw, rawSku) {
+    if (!raw || !rawSku) return {};
+    return {
+        brand_id: raw.brandId,
+        link_text: raw.linkText,
+        category_ids: (raw.categoriesIds && raw.categoriesIds[0] || "")
+            .split("/").filter(Boolean).map(Number),
+        sellers: (rawSku.sellers || []).map(s => {
+            const offer = s.commertialOffer || {};
+            return {
+                seller_id: s.sellerId,
+                seller_name: s.sellerName,
+                seller_default: s.sellerDefault,
+                add_to_cart_link: s.addToCartLink,
+                price: offer.Price,
+                list_price: offer.ListPrice,
+                available_quantity: offer.AvailableQuantity,
+                installments: offer.Installments || [],
+            };
+        }),
+        images: (rawSku.images || []).map(i => ({
+            image_id: i.imageId,
+            image_url: (i.imageUrl || "").split("?")[0],
+            image_label: i.imageLabel,
+        })),
+        variations: rawSku.variations || [],
+    };
+}
+
+function transformProducts(products, rawProducts) {
+    const rawById = new Map((rawProducts || []).map(p => [String(p.productId), p]));
     const eanMagentoPoints = ["2026260301011", "3349668657001", "2025030501016", "7804907924925", "2025030501017", "5060527644106", "689358361799", "836773001377", "2025030501017", "2025030501015", "8011003887514", "9780102830156", "2026030501011", "840216930520", "840216930537", "840216931299", "2026030201012", "815305025890", "815305025937", "403202601012", "2026100301011", "8809835063233", "8809835063585", "2025030501011", "2025030501012", "2025030501013", "840216933514", "2025030501014", "836773001353", "836773002282", "785364171473", "2025081101016", "2025241201011", "2025090801015", "615908434019", "2026020301014", "2026012201011", "2026012201012", "2026050101012", "2026050101011", "2025090801014", "2026100301012", "2026100301013", "2026100301014", "2026052501011", "2026051501014", "2026051501015", "8800283646009", "8800283646139", "2805202601019", "2805202601018", "2805202601020", "8809738315897", ];
     const eanMagentoPointsSet = new Set(eanMagentoPoints);
     return products.flatMap(product => product.skus.map(sku => {
+        const raw = rawById.get(String(product.id));
+        const rawSku = raw && (raw.items || []).find(i => String(i.itemId) === String(sku.id));
         const merged = {
             ...sku,
             ...product,
@@ -53,6 +87,7 @@ function transformProducts(products) {
             badges: product.clusterhighlights,
             metadata: buildMetadata(product),
             ...normalizeSpecs(sku.specs || product.specs),
+            ...buildVtexFields(raw, rawSku),
             active: product.skus.some(s => s.active === 1) ? 1 : product.active,
         };
         if (Number(merged.price) === 0 || eanMagentoPointsSet.has(String(merged.ean))) {
@@ -65,4 +100,4 @@ function transformProducts(products) {
         }, {});
     }));
 }
-parsedResults = transformProducts(items);
+parsedResults = transformProducts(items, typeof rawItems !== "undefined" ? rawItems : []);

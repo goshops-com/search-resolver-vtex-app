@@ -130,6 +130,9 @@ async function getProducts(url, appKey, appToken, productIds, options = {}) {
 
     const sandbox = {
       items: transformedProducts,
+      // Respuesta cruda de pub/products/search, para que el parse pueda leer
+      // los campos que transformProduct descarta (sellers, imageId, etc.).
+      rawItems: products,
       parsedResults: [],
       console: console,
     };
