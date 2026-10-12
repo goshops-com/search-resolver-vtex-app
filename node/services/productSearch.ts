@@ -27,6 +27,7 @@ import {
   filterProductsBySelectedFacets,
 } from './gopersonalLocalFacets'
 import { fetchGoPersonalResultSet } from './gopersonalResultSet'
+import { debugLog } from './debugLog'
 import { recordSpan, timed, timedSync } from './timing'
 
 type SegmentData = ReturnType<typeof extractSegmentData>
@@ -687,6 +688,11 @@ export async function fetchProductSearch(
   )
 
   logSponsoredProducts(ctx, result)
+
+  // Eliminar cuando se pase a main
+  debugLog(ctx, 'productSearch:output', {
+    result,
+  })
 
   return result
 }

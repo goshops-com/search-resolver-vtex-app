@@ -525,16 +525,7 @@ export const queries = {
     })
 
     debugLog(ctx, 'facets:output', {
-      recordsFiltered: result?.recordsFiltered,
-      queryArgs: result?.queryArgs,
-      facets: (result?.facets ?? []).map((facet: any) => ({
-        name: facet.name,
-        type: facet.type,
-        values: facet.values?.length ?? 0,
-        selected: (facet.values ?? [])
-          .filter((value: any) => value.selected)
-          .map((value: any) => value.value ?? value.name),
-      })),
+      result
     })
 
     return result
@@ -573,7 +564,6 @@ export const queries = {
     const productSearchArgs = {
       ...args,
       fullText: args.query,
-      __caller: 'query.products',
     } as unknown as ProductSearchInput
 
     const result = await fetchProductSearch(
@@ -603,6 +593,14 @@ export const queries = {
   },
 
   productSearch: async (_: unknown, args: ProductSearchInput, ctx: Context) => {
+    // Eliminar cuando se pase a main
+    debugLog(ctx, 'productSearch:input', {
+      _,
+      args,
+      ctx
+    })
+
+    // Eliminar cuando se pase a main
     startRequestTiming(ctx, 'productSearch', {
       fullText: args.fullText,
       query: args.query,
@@ -810,7 +808,6 @@ export const queries = {
       from: 0,
       to: args.count ? args.count - 1 : 4,
       options: { allowRedirect: false },
-      __caller: 'query.productSuggestions',
     } as unknown as ProductSearchInput
 
     const result = await fetchProductSearch(
