@@ -476,14 +476,14 @@ export const queries = {
     }
   },
   facets: async (_: unknown, args: FacetsInput, ctx: Context) => {
-    // Temporary: everything the storefront sends, before any normalization.
+    // Eliminar cuando se pase a main
     debugLog(ctx, 'facets:input', {
+      _,
       args,
-      segmentToken: ctx.vtex.segmentToken ?? null,
-      locale: ctx.vtex.locale ?? null,
-      route: ctx.vtex.route?.id ?? null,
+      ctx
     })
 
+    // Eliminar cuando se pase a main
     startRequestTiming(ctx, 'facets', {
       fullText: args.fullText,
       query: args.query,
@@ -491,12 +491,12 @@ export const queries = {
       selectedFacets: args.selectedFacets?.length ?? 0,
     })
 
+    // Separa shipping del resto de los facets
     const [shippingOptions, facets] = getShippingOptionsFromSelectedFacets(
       args.selectedFacets
     )
 
     args.selectedFacets = facets
-
     const hadExplicitFullText = hasExplicitFullText(args)
 
     args = await timed(ctx, 'compatibilityArgs', () =>
@@ -517,12 +517,6 @@ export const queries = {
     )
 
     const { selectedFacets } = args
-
-    debugLog(ctx, 'facets:resolvedArgs', {
-      args,
-      shippingOptions,
-      hadExplicitFullText,
-    })
 
     const result = await fetchFacets(ctx, {
       args,
