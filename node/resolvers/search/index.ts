@@ -12,6 +12,7 @@ import {
   fetchTopSearches,
 } from '../../services/autocomplete'
 import { fetchBanners } from '../../services/banners'
+import { debugLog } from '../../services/debugLog'
 import { fetchFacets } from '../../services/facets'
 import type {
   ProductArgs,
@@ -475,6 +476,14 @@ export const queries = {
     }
   },
   facets: async (_: unknown, args: FacetsInput, ctx: Context) => {
+    // Temporary: everything the storefront sends, before any normalization.
+    debugLog(ctx, 'facets:input', {
+      args,
+      segmentToken: ctx.vtex.segmentToken ?? null,
+      locale: ctx.vtex.locale ?? null,
+      route: ctx.vtex.route?.id ?? null,
+    })
+
     startRequestTiming(ctx, 'facets', {
       fullText: args.fullText,
       query: args.query,
@@ -509,11 +518,32 @@ export const queries = {
 
     const { selectedFacets } = args
 
-    return fetchFacets(ctx, {
+    debugLog(ctx, 'facets:resolvedArgs', {
+      args,
+      shippingOptions,
+      hadExplicitFullText,
+    })
+
+    const result = await fetchFacets(ctx, {
       args,
       selectedFacets: selectedFacets ?? [],
       shippingOptions,
     })
+
+    debugLog(ctx, 'facets:output', {
+      recordsFiltered: result?.recordsFiltered,
+      queryArgs: result?.queryArgs,
+      facets: (result?.facets ?? []).map((facet: any) => ({
+        name: facet.name,
+        type: facet.type,
+        values: facet.values?.length ?? 0,
+        selected: (facet.values ?? [])
+          .filter((value: any) => value.selected)
+          .map((value: any) => value.value ?? value.name),
+      })),
+    })
+
+    return result
   },
 
   product: async (_: any, rawArgs: ProductArgs, ctx: Context) => {
