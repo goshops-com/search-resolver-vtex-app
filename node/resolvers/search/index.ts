@@ -645,7 +645,17 @@ export const queries = {
 
     const { selectedFacets } = args
 
-    return fetchProductSearch(ctx, args, selectedFacets ?? [], shippingOptions)
+    const result = await fetchProductSearch(
+      ctx,
+      args,
+      selectedFacets ?? [],
+      shippingOptions
+    )
+
+    // Eliminar cuando se pase a main
+    debugLog(ctx, 'productSearch:output', { result })
+
+    return result
   },
 
   sponsoredProducts: async (_: any, args: ProductSearchInput, ctx: any) => {
