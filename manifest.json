@@ -28,7 +28,8 @@
       },
       "gopersonalProjectId": {
         "title": "GoPersonal project id",
-        "type": "string"
+        "type": "string",
+        "default": "6a91a8f3a5da3cc7150a4c03"
       },
       "brandGroupName": {
         "title": "Brand filter title",
