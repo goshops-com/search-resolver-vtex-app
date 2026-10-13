@@ -86,7 +86,7 @@ async function getProducts(url, appKey, appToken, productIds, options = {}) {
   try {
     const response = await axiosInstance({
       method: "get",
-      url: `${url}/api/catalog_system/pub/products/search?${query}`,
+      url: `${url}/api/catalog_system/pub/products/search?${query}&compSpecs=true`,
       headers,
       ...(options.previewInput ? { timeout: 15000 } : {}),
     });
@@ -193,6 +193,18 @@ function transformProduct(product, baseUrl) {
     productReferenceCode,
     skus: transformSkus(product.items, baseUrl, product),
     specs: processSpecifications(product),
+    brand_id: product.brandId,
+    link_text: product.linkText || "",
+    category_path_ids: (
+      (Array.isArray(product.categoriesIds) && product.categoriesIds[0]) ||
+      ""
+    )
+      .split("/")
+      .filter(Boolean)
+      .map(Number),
+    // Producto de VTEX tal como lo devuelve pub/products/search, para que el
+    // search de GoPersonal lo devuelva sin volver a pedírselo al catálogo.
+    vtex_product: product,
   };
 
   if (Array.isArray(product.Especificaciones)) {
@@ -571,6 +583,25 @@ function transformSkus(items, baseUrl, product) {
           }))
         : [],
       sku_specs: skuSpecs,
+      sellers: (item.sellers || []).map((seller) => {
+        const offer = seller.commertialOffer || {};
+        return {
+          seller_id: seller.sellerId,
+          seller_name: seller.sellerName,
+          seller_default: seller.sellerDefault,
+          add_to_cart_link: seller.addToCartLink,
+          price: offer.Price,
+          list_price: offer.ListPrice,
+          available_quantity: offer.AvailableQuantity,
+          installments: offer.Installments || [],
+        };
+      }),
+      images: (item.images || []).map((img) => ({
+        image_id: img.imageId,
+        image_url: (img.imageUrl || "").split("?")[0],
+        image_label: img.imageLabel,
+      })),
+      variations: item.variations || [],
       product_specs: extractProductSpecs(product),
       talla: item["Talla Sku"], // Keep this for backward compatibility if needed
     };
