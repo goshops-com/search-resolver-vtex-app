@@ -91,7 +91,7 @@ async function getProducts(url, appKey, appToken, productIds, options = {}) {
   try {
     const response = await axiosInstance({
       method: "get",
-      url: `${url}/api/catalog_system/pub/products/search?${query}`,
+      url: `${url}/api/catalog_system/pub/products/search?${query}&compSpecs=true`,
       headers,
     });
 
