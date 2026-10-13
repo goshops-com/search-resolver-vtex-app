@@ -1,8 +1,3 @@
-// Pegá acá el paso previo del sync de GoPersonal: la función que consulta VTEX,
-// arma los `items` (skus, imgs, specs, categorías, etc.) y luego invoca el parse
-// de gopersonal-sync-parser.js. Incluí también el punto donde se inyecta/llama ese parse.
-// Archivo temporal de análisis: no forma parte de la app.
-
 const axios = require("axios");
 const axiosRetry = require("axios-retry");
 const { Integration } = require("../../integration.model");
@@ -91,8 +86,9 @@ async function getProducts(url, appKey, appToken, productIds, options = {}) {
   try {
     const response = await axiosInstance({
       method: "get",
-      url: `${url}/api/catalog_system/pub/products/search?${query}&compSpecs=true`,
+      url: `${url}/api/catalog_system/pub/products/search?${query}`,
       headers,
+      ...(options.previewInput ? { timeout: 15000 } : {}),
     });
 
     let products = response.data;
@@ -101,6 +97,8 @@ async function getProducts(url, appKey, appToken, productIds, options = {}) {
     const transformedProducts = products.map((product) =>
       transformProduct(product, options.overrideURL || url),
     );
+
+    if (options.previewInput) return transformedProducts;
 
     // VM Parse Execution
     const parseFunction =
@@ -146,6 +144,7 @@ async function getProducts(url, appKey, appToken, productIds, options = {}) {
     }
   } catch (error) {
     console.error("Error fetching products:", error.message);
+    if (options.previewInput) throw error;
     if (error.response) {
       console.error("Response status:", error.response.status);
       console.error("Response data:", error.response.data);
@@ -158,6 +157,10 @@ function transformProduct(product, baseUrl) {
     console.error("Invalid product object");
     return null;
   }
+
+  const productReferenceCode = String(
+    product.productReferenceCode || product.productReference || "",
+  );
 
   const transformedProduct = {
     id: product.productId || "",
@@ -187,20 +190,9 @@ function transformProduct(product, baseUrl) {
       getLowestPrice(product.items),
       getHighestListPrice(product.items),
     ),
+    productReferenceCode,
     skus: transformSkus(product.items, baseUrl, product),
     specs: processSpecifications(product),
-    brand_id: product.brandId,
-    link_text: product.linkText || "",
-    category_path_ids: (
-      (Array.isArray(product.categoriesIds) && product.categoriesIds[0]) ||
-      ""
-    )
-      .split("/")
-      .filter(Boolean)
-      .map(Number),
-    // Producto de VTEX tal como lo devuelve pub/products/search, para que el
-    // search de GoPersonal lo devuelva sin volver a pedírselo al catálogo.
-    vtex_product: product,
   };
 
   if (Array.isArray(product.Especificaciones)) {
@@ -213,6 +205,10 @@ function transformProduct(product, baseUrl) {
 
   if (Object.prototype.hasOwnProperty.call(product, "clusterHighlights")) {
     transformedProduct.clusterHighlights = product.clusterHighlights ?? {};
+  }
+
+  if (Object.prototype.hasOwnProperty.call(product, "productClusters")) {
+    transformedProduct.productClusters = product.productClusters ?? {};
   }
 
   return transformedProduct;
@@ -310,12 +306,12 @@ async function syncProductsLargeCatalog(integrationId) {
             integrationData.appKey,
             integrationData.appToken,
             ids,
-            (options = {
+            {
               overrideURL: integrationData.product_url
                 ? integrationData.product_url
                 : integrationData.url,
               parse: integrationData.parse_products || integrationData.products.parse
-            }),
+            },
           );
           if (!Array.isArray(products) || products.length === 0) {
             // El último batch debe devolver su marcador aunque venga vacío:
@@ -575,25 +571,6 @@ function transformSkus(items, baseUrl, product) {
           }))
         : [],
       sku_specs: skuSpecs,
-      sellers: (item.sellers || []).map((seller) => {
-        const offer = seller.commertialOffer || {};
-        return {
-          seller_id: seller.sellerId,
-          seller_name: seller.sellerName,
-          seller_default: seller.sellerDefault,
-          add_to_cart_link: seller.addToCartLink,
-          price: offer.Price,
-          list_price: offer.ListPrice,
-          available_quantity: offer.AvailableQuantity,
-          installments: offer.Installments || [],
-        };
-      }),
-      images: (item.images || []).map((img) => ({
-        image_id: img.imageId,
-        image_url: (img.imageUrl || "").split("?")[0],
-        image_label: img.imageLabel,
-      })),
-      variations: item.variations || [],
       product_specs: extractProductSpecs(product),
       talla: item["Talla Sku"], // Keep this for backward compatibility if needed
     };
@@ -615,5 +592,7 @@ function extractProductSpecs(product) {
 }
 
 module.exports = {
+  getProducts,
+  getProductsIds,
   syncProductsLargeCatalog,
 };
