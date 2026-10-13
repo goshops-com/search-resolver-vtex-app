@@ -130,9 +130,6 @@ async function getProducts(url, appKey, appToken, productIds, options = {}) {
 
     const sandbox = {
       items: transformedProducts,
-      // Respuesta cruda de pub/products/search, para que el parse pueda leer
-      // los campos que transformProduct descarta (sellers, imageId, etc.).
-      rawItems: products,
       parsedResults: [],
       console: console,
     };
@@ -192,6 +189,16 @@ function transformProduct(product, baseUrl) {
     ),
     skus: transformSkus(product.items, baseUrl, product),
     specs: processSpecifications(product),
+    brand_id: product.brandId,
+    link_text: product.linkText || "",
+    category_path_ids: (
+      (Array.isArray(product.categoriesIds) && product.categoriesIds[0]) ||
+      ""
+    )
+      .split("/")
+      .filter(Boolean)
+      .map(Number),
+    vtex_product: buildVtexProduct(product),
   };
 
   if (Array.isArray(product.Especificaciones)) {
@@ -207,6 +214,25 @@ function transformProduct(product, baseUrl) {
   }
 
   return transformedProduct;
+}
+
+// Producto de VTEX tal como lo devuelve pub/products/search (con
+// compSpecs=true), para que el search de GoPersonal lo devuelva y el resolver
+// no tenga que volver a pedírselo al catálogo. Los links quedan relativos: el
+// catálogo los arma contra portal.vtexcommercestable.com.br, que manda al
+// login del admin.
+function buildVtexProduct(product) {
+  return {
+    ...product,
+    link: product.linkText ? `/${product.linkText}/p` : product.link,
+    items: (product.items || []).map((item) => ({
+      ...item,
+      sellers: (item.sellers || []).map((seller) => ({
+        ...seller,
+        addToCartLink: "",
+      })),
+    })),
+  };
 }
 
 async function syncProductsLargeCatalog(integrationId) {
@@ -566,6 +592,25 @@ function transformSkus(items, baseUrl, product) {
           }))
         : [],
       sku_specs: skuSpecs,
+      sellers: (item.sellers || []).map((seller) => {
+        const offer = seller.commertialOffer || {};
+        return {
+          seller_id: seller.sellerId,
+          seller_name: seller.sellerName,
+          seller_default: seller.sellerDefault,
+          add_to_cart_link: seller.addToCartLink,
+          price: offer.Price,
+          list_price: offer.ListPrice,
+          available_quantity: offer.AvailableQuantity,
+          installments: offer.Installments || [],
+        };
+      }),
+      images: (item.images || []).map((img) => ({
+        image_id: img.imageId,
+        image_url: (img.imageUrl || "").split("?")[0],
+        image_label: img.imageLabel,
+      })),
+      variations: item.variations || [],
       product_specs: extractProductSpecs(product),
       talla: item["Talla Sku"], // Keep this for backward compatibility if needed
     };
