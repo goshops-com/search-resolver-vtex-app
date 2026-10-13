@@ -198,7 +198,9 @@ function transformProduct(product, baseUrl) {
       .split("/")
       .filter(Boolean)
       .map(Number),
-    vtex_product: buildVtexProduct(product),
+    // Producto de VTEX tal como lo devuelve pub/products/search, para que el
+    // search de GoPersonal lo devuelva sin volver a pedírselo al catálogo.
+    vtex_product: product,
   };
 
   if (Array.isArray(product.Especificaciones)) {
@@ -214,25 +216,6 @@ function transformProduct(product, baseUrl) {
   }
 
   return transformedProduct;
-}
-
-// Producto de VTEX tal como lo devuelve pub/products/search (con
-// compSpecs=true), para que el search de GoPersonal lo devuelva y el resolver
-// no tenga que volver a pedírselo al catálogo. Los links quedan relativos: el
-// catálogo los arma contra portal.vtexcommercestable.com.br, que manda al
-// login del admin.
-function buildVtexProduct(product) {
-  return {
-    ...product,
-    link: product.linkText ? `/${product.linkText}/p` : product.link,
-    items: (product.items || []).map((item) => ({
-      ...item,
-      sellers: (item.sellers || []).map((seller) => ({
-        ...seller,
-        addToCartLink: "",
-      })),
-    })),
-  };
 }
 
 async function syncProductsLargeCatalog(integrationId) {
