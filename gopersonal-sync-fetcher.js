@@ -204,7 +204,40 @@ function transformProduct(product, baseUrl) {
       .map(Number),
     // Producto de VTEX tal como lo devuelve pub/products/search, para que el
     // search de GoPersonal lo devuelva sin volver a pedírselo al catálogo.
-    vtex_product: product,
+    vtex_product: {
+      productId: product.productId,
+      productName: product.productName,
+      brand: product.brand,
+      brandId: product.brandId,
+      brandImageUrl: product.brandImageUrl,
+      linkText: product.linkText,
+      productReference: product.productReference,
+      productReferenceCode: product.productReferenceCode,
+      categoryId: product.categoryId,
+      productTitle: product.productTitle,
+      metaTagDescription: product.metaTagDescription,
+      releaseDate: product.releaseDate,
+      clusterHighlights: product.clusterHighlights,
+      productClusters: product.productClusters,
+      searchableClusters: product.searchableClusters,
+      categories: product.categories,
+      categoriesIds: product.categoriesIds,
+      link: product.link,
+      description: product.description,
+      allSpecifications: product.allSpecifications,
+      allSpecificationsGroups: product.allSpecificationsGroups,
+      completeSpecifications: product.completeSpecifications,
+      items: product.items,
+      // Specs dinámicas ("Tipo", "Color", "Peso"...) y grupos de specs
+      // ("Mercado Libre"...): sus nombres vienen en allSpecifications y
+      // allSpecificationsGroups y cambian según la categoría del producto
+      ...Object.fromEntries(
+        [
+          ...(product.allSpecifications || []),
+          ...(product.allSpecificationsGroups || []),
+        ].map((name) => [name, product[name]])
+      ),
+    },
   };
 
   if (Array.isArray(product.Especificaciones)) {
