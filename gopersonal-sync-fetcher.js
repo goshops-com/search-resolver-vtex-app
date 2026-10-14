@@ -217,7 +217,7 @@ function transformProduct(product, baseUrl) {
     allSpecificationsGroups: product.allSpecificationsGroups,
     completeSpecifications: product.completeSpecifications,
     items: product.items,
-    vtex_specs: Object.fromEntries(
+    raw_specs: Object.fromEntries(
       [
         ...(product.allSpecifications || []),
         ...(product.allSpecificationsGroups || []),

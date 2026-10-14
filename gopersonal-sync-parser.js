@@ -61,7 +61,7 @@ function transformProducts(products) {
             category_path_ids, brandImageUrl, productReference, productTitle,
             metaTagDescription, releaseDate, clusterHighlights, productClusters,
             searchableClusters, categories, categoriesIds, link, allSpecifications,
-            allSpecificationsGroups, completeSpecifications, items, vtex_specs,
+            allSpecificationsGroups, completeSpecifications, items, raw_specs,
             ...productFields
         } = product;
         const merged = {
@@ -109,7 +109,7 @@ function transformProducts(products) {
             allSpecificationsGroups,
             completeSpecifications,
             items,
-            ...vtex_specs,
+            ...raw_specs,
         });
         return normalized;
     }));
