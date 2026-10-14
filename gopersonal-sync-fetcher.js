@@ -202,8 +202,6 @@ function transformProduct(product, baseUrl) {
       .split("/")
       .filter(Boolean)
       .map(Number),
-    // Campos de VTEX que el parser junta en vtex_product para que el search
-    // de GoPersonal los devuelva sin volver a pedírselos al catálogo.
     brandImageUrl: product.brandImageUrl,
     productReference: product.productReference,
     productTitle: product.productTitle,
@@ -219,8 +217,6 @@ function transformProduct(product, baseUrl) {
     allSpecificationsGroups: product.allSpecificationsGroups,
     completeSpecifications: product.completeSpecifications,
     items: product.items,
-    // Specs dinámicas ("Tipo", "Color"...) y grupos de specs ("Mercado
-    // Libre"...) en crudo: sus nombres cambian según la categoría
     vtex_specs: Object.fromEntries(
       [
         ...(product.allSpecifications || []),
