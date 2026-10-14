@@ -204,6 +204,7 @@ function transformProduct(product, baseUrl) {
       .map(Number),
     brandImageUrl: product.brandImageUrl,
     productReference: product.productReference,
+    rawProductReferenceCode: product.productReferenceCode,
     productTitle: product.productTitle,
     metaTagDescription: product.metaTagDescription,
     releaseDate: product.releaseDate,

@@ -58,7 +58,8 @@ function transformProducts(products) {
     const eanMagentoPointsSet = new Set(eanMagentoPoints);
     return products.flatMap(product => product.skus.map(sku => {
         const {
-            category_path_ids, brandImageUrl, productReference, productTitle,
+            category_path_ids, brandImageUrl, productReference, rawProductReferenceCode,
+            productTitle,
             metaTagDescription, releaseDate, clusterHighlights, productClusters,
             searchableClusters, categories, categoriesIds, link, allSpecifications,
             allSpecificationsGroups, completeSpecifications, items, raw_specs,
@@ -93,7 +94,7 @@ function transformProducts(products) {
             brandImageUrl,
             linkText: product.link_text,
             productReference,
-            productReferenceCode: product.productReferenceCode,
+            productReferenceCode: rawProductReferenceCode,
             categoryId: product.category_ids,
             productTitle,
             metaTagDescription,
