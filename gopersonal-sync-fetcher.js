@@ -202,42 +202,31 @@ function transformProduct(product, baseUrl) {
       .split("/")
       .filter(Boolean)
       .map(Number),
-    // Producto de VTEX tal como lo devuelve pub/products/search, para que el
-    // search de GoPersonal lo devuelva sin volver a pedírselo al catálogo.
-    vtex_product: {
-      productId: product.productId,
-      productName: product.productName,
-      brand: product.brand,
-      brandId: product.brandId,
-      brandImageUrl: product.brandImageUrl,
-      linkText: product.linkText,
-      productReference: product.productReference,
-      productReferenceCode: product.productReferenceCode,
-      categoryId: product.categoryId,
-      productTitle: product.productTitle,
-      metaTagDescription: product.metaTagDescription,
-      releaseDate: product.releaseDate,
-      clusterHighlights: product.clusterHighlights,
-      productClusters: product.productClusters,
-      searchableClusters: product.searchableClusters,
-      categories: product.categories,
-      categoriesIds: product.categoriesIds,
-      link: product.link,
-      description: product.description,
-      allSpecifications: product.allSpecifications,
-      allSpecificationsGroups: product.allSpecificationsGroups,
-      completeSpecifications: product.completeSpecifications,
-      items: product.items,
-      // Specs dinámicas ("Tipo", "Color", "Peso"...) y grupos de specs
-      // ("Mercado Libre"...): sus nombres vienen en allSpecifications y
-      // allSpecificationsGroups y cambian según la categoría del producto
-      ...Object.fromEntries(
-        [
-          ...(product.allSpecifications || []),
-          ...(product.allSpecificationsGroups || []),
-        ].map((name) => [name, product[name]])
-      ),
-    },
+    // Campos de VTEX que el parser junta en vtex_product para que el search
+    // de GoPersonal los devuelva sin volver a pedírselos al catálogo.
+    brandImageUrl: product.brandImageUrl,
+    productReference: product.productReference,
+    productTitle: product.productTitle,
+    metaTagDescription: product.metaTagDescription,
+    releaseDate: product.releaseDate,
+    clusterHighlights: product.clusterHighlights,
+    productClusters: product.productClusters,
+    searchableClusters: product.searchableClusters,
+    categories: product.categories,
+    categoriesIds: product.categoriesIds,
+    link: product.link,
+    allSpecifications: product.allSpecifications,
+    allSpecificationsGroups: product.allSpecificationsGroups,
+    completeSpecifications: product.completeSpecifications,
+    items: product.items,
+    // Specs dinámicas ("Tipo", "Color"...) y grupos de specs ("Mercado
+    // Libre"...) en crudo: sus nombres cambian según la categoría
+    vtex_specs: Object.fromEntries(
+      [
+        ...(product.allSpecifications || []),
+        ...(product.allSpecificationsGroups || []),
+      ].map((name) => [name, product[name]])
+    ),
   };
 
   if (Array.isArray(product.Especificaciones)) {
