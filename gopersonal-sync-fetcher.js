@@ -217,7 +217,61 @@ function transformProduct(product, baseUrl) {
     allSpecifications: product.allSpecifications,
     allSpecificationsGroups: product.allSpecificationsGroups,
     completeSpecifications: product.completeSpecifications,
-    items: slimItems(product.items),
+    // Sólo lo que leen el storefront y la app; se descartan PaymentOptions
+    // (lo más pesado), DeliverySlaSamples*, BuyTogether, PromotionTeasers, etc.
+    items: (product.items || []).map((item) => ({
+      itemId: item.itemId,
+      name: item.name,
+      nameComplete: item.nameComplete,
+      complementName: item.complementName,
+      ean: item.ean,
+      referenceId: item.referenceId,
+      measurementUnit: item.measurementUnit,
+      unitMultiplier: item.unitMultiplier,
+      Videos: item.Videos,
+      variations: item.variations,
+      // El resolver SKU.variations lee los valores de item[nombreVariación]
+      ...Object.fromEntries(
+        (item.variations || []).map((variation) => [variation, item[variation]]),
+      ),
+      images: (item.images || []).map((img) => ({
+        imageId: img.imageId,
+        imageLabel: img.imageLabel,
+        imageTag: img.imageTag,
+        imageUrl: img.imageUrl,
+        imageText: img.imageText,
+      })),
+      sellers: (item.sellers || []).map((seller) => {
+        const offer = seller.commertialOffer || {};
+        return {
+          sellerId: seller.sellerId,
+          sellerName: seller.sellerName,
+          sellerDefault: seller.sellerDefault,
+          commertialOffer: {
+            Price: offer.Price,
+            ListPrice: offer.ListPrice,
+            PriceWithoutDiscount: offer.PriceWithoutDiscount,
+            RewardValue: offer.RewardValue,
+            PriceValidUntil: offer.PriceValidUntil,
+            AvailableQuantity: offer.AvailableQuantity,
+            IsAvailable: offer.IsAvailable,
+            Tax: offer.Tax,
+            Teasers: offer.Teasers,
+            DiscountHighLight: offer.DiscountHighLight,
+            GiftSkuIds: offer.GiftSkuIds,
+            PriceToken: offer.PriceToken,
+            Installments: (offer.Installments || []).map((installment) => ({
+              Value: installment.Value,
+              InterestRate: installment.InterestRate,
+              TotalValuePlusInterestRate: installment.TotalValuePlusInterestRate,
+              NumberOfInstallments: installment.NumberOfInstallments,
+              PaymentSystemName: installment.PaymentSystemName,
+              Name: installment.Name,
+            })),
+          },
+        };
+      }),
+    })),
     raw_specs: Object.fromEntries(
       [
         ...(product.allSpecifications || []),
@@ -626,51 +680,6 @@ function transformSkus(items, baseUrl, product) {
     };
   });
 }
-// items para vtex_product: sólo lo que leen el storefront y la app.
-// Se descartan PaymentOptions (lo más pesado), DeliverySlaSamples*, BuyTogether,
-// PromotionTeasers, FullSellingPrice, addToCartLink, modalType, isKit, etc.
-const OFFER_FIELDS = [
-  "Price", "ListPrice", "PriceWithoutDiscount", "RewardValue", "PriceValidUntil",
-  "AvailableQuantity", "IsAvailable", "Tax", "Teasers", "DiscountHighLight",
-  "GiftSkuIds", "PriceToken",
-];
-const INSTALLMENT_FIELDS = [
-  "Value", "InterestRate", "TotalValuePlusInterestRate", "NumberOfInstallments",
-  "PaymentSystemName", "Name",
-];
-
-function pick(obj, keys) {
-  return Object.fromEntries(
-    keys.filter((key) => obj && obj[key] !== undefined).map((key) => [key, obj[key]]),
-  );
-}
-
-function slimItems(items) {
-  return (items || []).map((item) => ({
-    ...pick(item, [
-      "itemId", "name", "nameComplete", "complementName", "ean", "referenceId",
-      "measurementUnit", "unitMultiplier", "Videos", "variations",
-    ]),
-    // El resolver SKU.variations lee los valores de item[nombreVariación]
-    ...pick(item, item.variations || []),
-    images: (item.images || []).map((img) =>
-      pick(img, ["imageId", "imageLabel", "imageTag", "imageUrl", "imageText"]),
-    ),
-    sellers: (item.sellers || []).map((seller) => {
-      const offer = seller.commertialOffer || {};
-      return {
-        ...pick(seller, ["sellerId", "sellerName", "sellerDefault"]),
-        commertialOffer: {
-          ...pick(offer, OFFER_FIELDS),
-          Installments: (offer.Installments || []).map((i) =>
-            pick(i, INSTALLMENT_FIELDS),
-          ),
-        },
-      };
-    }),
-  }));
-}
-
 function extractProductSpecs(product) {
   const specs = [];
   if (product && Array.isArray(product.Especificaciones)) {
