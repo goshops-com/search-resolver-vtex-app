@@ -228,6 +228,9 @@ function transformProduct(product, baseUrl) {
         referenceId: item.referenceId,
         measurementUnit: item.measurementUnit,
         unitMultiplier: item.unitMultiplier,
+        kitItems: item.kitItems,
+        attachments: item.attachments,
+        estimatedDateArrival: item.estimatedDateArrival,
         Videos: item.Videos,
         variations: item.variations || [],
         ...Object.fromEntries(
@@ -256,12 +259,10 @@ function transformProduct(product, baseUrl) {
               RewardValue: offer.RewardValue,
               PriceValidUntil: offer.PriceValidUntil,
               AvailableQuantity: offer.AvailableQuantity,
-              IsAvailable: offer.IsAvailable,
               Tax: offer.Tax,
               Teasers: offer.Teasers,
               DiscountHighLight: offer.DiscountHighLight,
               GiftSkuIds: offer.GiftSkuIds,
-              PriceToken: offer.PriceToken,
               Installments: (offer.Installments || [])
                 .filter(Boolean)
                 .map((installment) => ({
@@ -271,6 +272,7 @@ function transformProduct(product, baseUrl) {
                     installment.TotalValuePlusInterestRate,
                   NumberOfInstallments: installment.NumberOfInstallments,
                   PaymentSystemName: installment.PaymentSystemName,
+                  PaymentSystemGroupName: installment.PaymentSystemGroupName,
                   Name: installment.Name,
                 })),
             },
