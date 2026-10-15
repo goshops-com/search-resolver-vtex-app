@@ -107,12 +107,38 @@ function transformProducts(products) {
             searchableClusters,
             categories,
             categoriesIds,
-            link,
+            // Relativo, igual que la hidratación del catálogo: el host absoluto
+            // de VTEX manda a los compradores al login del admin.
+            link: product.link_text ? `/${product.link_text}/p` : link,
             description: product.description,
             allSpecifications,
             allSpecificationsGroups,
             completeSpecifications,
-            items,
+            // Mismo SKU que arma la hidratación del catálogo, con defaults en
+            // los arrays que los resolvers recorren sin chequear.
+            items: (items || []).map(item => ({
+                ...item,
+                complementName: item.complementName || "",
+                ean: item.ean || "",
+                referenceId: item.referenceId || [],
+                isKit: Boolean(item.isKit),
+                kitItems: item.kitItems || [],
+                attachments: item.attachments || [],
+                Videos: item.Videos || [],
+                variations: item.variations || [],
+                images: item.images || [],
+                sellers: (item.sellers || []).map(seller => ({
+                    ...seller,
+                    addToCartLink: "",
+                    commertialOffer: {
+                        ...seller.commertialOffer,
+                        Installments: seller.commertialOffer?.Installments || [],
+                        Teasers: seller.commertialOffer?.Teasers || [],
+                        DiscountHighLight: seller.commertialOffer?.DiscountHighLight || [],
+                        GiftSkuIds: seller.commertialOffer?.GiftSkuIds || [],
+                    },
+                })),
+            })),
             ...raw_specs,
         });
         return normalized;

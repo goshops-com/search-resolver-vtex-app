@@ -228,6 +228,11 @@ function transformProduct(product, baseUrl) {
       referenceId: item.referenceId,
       measurementUnit: item.measurementUnit,
       unitMultiplier: item.unitMultiplier,
+      modalType: item.modalType,
+      isKit: item.isKit,
+      kitItems: item.kitItems,
+      attachments: item.attachments,
+      estimatedDateArrival: item.estimatedDateArrival,
       Videos: item.Videos,
       variations: item.variations,
       // El resolver SKU.variations lee los valores de item[nombreVariación]
