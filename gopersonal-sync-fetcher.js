@@ -214,72 +214,78 @@ function transformProduct(product, baseUrl) {
     categories: product.categories,
     categoriesIds: product.categoriesIds,
     link: product.link,
-    allSpecifications: product.allSpecifications,
-    allSpecificationsGroups: product.allSpecificationsGroups,
-    completeSpecifications: product.completeSpecifications,
-    // Sólo los campos que expone el schema GraphQL de búsqueda de VTEX; se
-    // descartan PaymentOptions (lo más pesado), PriceToken (vence a los 30
-    // minutos), DeliverySlaSamples*, BuyTogether, PromotionTeasers, etc.
-    items: (product.items || []).map((item) => ({
-      itemId: item.itemId,
-      name: item.name,
-      nameComplete: item.nameComplete,
-      complementName: item.complementName,
-      ean: item.ean,
-      referenceId: item.referenceId,
-      measurementUnit: item.measurementUnit,
-      unitMultiplier: item.unitMultiplier,
-      kitItems: item.kitItems,
-      attachments: item.attachments,
-      estimatedDateArrival: item.estimatedDateArrival,
-      Videos: item.Videos,
-      variations: item.variations,
-      // El resolver SKU.variations lee los valores de item[nombreVariación]
-      ...Object.fromEntries(
-        (item.variations || []).map((variation) => [variation, item[variation]]),
-      ),
-      images: (item.images || []).map((img) => ({
-        imageId: img.imageId,
-        imageLabel: img.imageLabel,
-        imageTag: img.imageTag,
-        imageUrl: img.imageUrl,
-        imageText: img.imageText,
+    allSpecifications: product.allSpecifications || [],
+    allSpecificationsGroups: product.allSpecificationsGroups || [],
+    completeSpecifications: product.completeSpecifications || [],
+    items: (Array.isArray(product.items) ? product.items : [])
+      .filter(Boolean)
+      .map((item) => ({
+        itemId: item.itemId,
+        name: item.name,
+        nameComplete: item.nameComplete,
+        complementName: item.complementName,
+        ean: item.ean,
+        referenceId: item.referenceId,
+        measurementUnit: item.measurementUnit,
+        unitMultiplier: item.unitMultiplier,
+        Videos: item.Videos,
+        variations: item.variations || [],
+        ...Object.fromEntries(
+          (item.variations || []).map((variation) => [
+            variation,
+            item[variation],
+          ]),
+        ),
+        images: (item.images || []).filter(Boolean).map((img) => ({
+          imageId: img.imageId,
+          imageLabel: img.imageLabel,
+          imageTag: img.imageTag,
+          imageUrl: img.imageUrl,
+          imageText: img.imageText,
+        })),
+        sellers: (item.sellers || []).filter(Boolean).map((seller) => {
+          const offer = seller.commertialOffer || {};
+          return {
+            sellerId: seller.sellerId,
+            sellerName: seller.sellerName,
+            sellerDefault: seller.sellerDefault,
+            commertialOffer: {
+              Price: offer.Price,
+              ListPrice: offer.ListPrice,
+              PriceWithoutDiscount: offer.PriceWithoutDiscount,
+              RewardValue: offer.RewardValue,
+              PriceValidUntil: offer.PriceValidUntil,
+              AvailableQuantity: offer.AvailableQuantity,
+              IsAvailable: offer.IsAvailable,
+              Tax: offer.Tax,
+              Teasers: offer.Teasers,
+              DiscountHighLight: offer.DiscountHighLight,
+              GiftSkuIds: offer.GiftSkuIds,
+              PriceToken: offer.PriceToken,
+              Installments: (offer.Installments || [])
+                .filter(Boolean)
+                .map((installment) => ({
+                  Value: installment.Value,
+                  InterestRate: installment.InterestRate,
+                  TotalValuePlusInterestRate:
+                    installment.TotalValuePlusInterestRate,
+                  NumberOfInstallments: installment.NumberOfInstallments,
+                  PaymentSystemName: installment.PaymentSystemName,
+                  Name: installment.Name,
+                })),
+            },
+          };
+        }),
       })),
-      sellers: (item.sellers || []).map((seller) => {
-        const offer = seller.commertialOffer || {};
-        return {
-          sellerId: seller.sellerId,
-          sellerName: seller.sellerName,
-          sellerDefault: seller.sellerDefault,
-          commertialOffer: {
-            Price: offer.Price,
-            ListPrice: offer.ListPrice,
-            PriceWithoutDiscount: offer.PriceWithoutDiscount,
-            RewardValue: offer.RewardValue,
-            PriceValidUntil: offer.PriceValidUntil,
-            AvailableQuantity: offer.AvailableQuantity,
-            Tax: offer.Tax,
-            Teasers: offer.Teasers,
-            DiscountHighLight: offer.DiscountHighLight,
-            GiftSkuIds: offer.GiftSkuIds,
-            Installments: (offer.Installments || []).map((installment) => ({
-              Value: installment.Value,
-              InterestRate: installment.InterestRate,
-              TotalValuePlusInterestRate: installment.TotalValuePlusInterestRate,
-              NumberOfInstallments: installment.NumberOfInstallments,
-              PaymentSystemName: installment.PaymentSystemName,
-              PaymentSystemGroupName: installment.PaymentSystemGroupName,
-              Name: installment.Name,
-            })),
-          },
-        };
-      }),
-    })),
     raw_specs: Object.fromEntries(
       [
-        ...(product.allSpecifications || []),
-        ...(product.allSpecificationsGroups || []),
-      ].map((name) => [name, product[name]])
+        ...(Array.isArray(product.allSpecifications)
+          ? product.allSpecifications
+          : []),
+        ...(Array.isArray(product.allSpecificationsGroups)
+          ? product.allSpecificationsGroups
+          : []),
+      ].map((name) => [name, product[name]]),
     ),
   };
 
@@ -659,7 +665,7 @@ function transformSkus(items, baseUrl, product) {
           }))
         : [],
       sku_specs: skuSpecs,
-      sellers: (item.sellers || []).map((seller) => {
+      sellers: (item.sellers || []).filter(Boolean).map((seller) => {
         const offer = seller.commertialOffer || {};
         return {
           seller_id: seller.sellerId,
@@ -672,7 +678,7 @@ function transformSkus(items, baseUrl, product) {
           installments: offer.Installments || [],
         };
       }),
-      images: (item.images || []).map((img) => ({
+      images: (item.images || []).filter(Boolean).map((img) => ({
         image_id: img.imageId,
         image_url: (img.imageUrl || "").split("?")[0],
         image_label: img.imageLabel,
