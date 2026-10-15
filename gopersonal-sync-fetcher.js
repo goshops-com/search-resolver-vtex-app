@@ -217,7 +217,7 @@ function transformProduct(product, baseUrl) {
     allSpecifications: product.allSpecifications,
     allSpecificationsGroups: product.allSpecificationsGroups,
     completeSpecifications: product.completeSpecifications,
-    items: product.items,
+    items: slimItems(product.items),
     raw_specs: Object.fromEntries(
       [
         ...(product.allSpecifications || []),
@@ -626,6 +626,51 @@ function transformSkus(items, baseUrl, product) {
     };
   });
 }
+// items para vtex_product: sólo lo que leen el storefront y la app.
+// Se descartan PaymentOptions (lo más pesado), DeliverySlaSamples*, BuyTogether,
+// PromotionTeasers, FullSellingPrice, addToCartLink, modalType, isKit, etc.
+const OFFER_FIELDS = [
+  "Price", "ListPrice", "PriceWithoutDiscount", "RewardValue", "PriceValidUntil",
+  "AvailableQuantity", "IsAvailable", "Tax", "Teasers", "DiscountHighLight",
+  "GiftSkuIds", "PriceToken",
+];
+const INSTALLMENT_FIELDS = [
+  "Value", "InterestRate", "TotalValuePlusInterestRate", "NumberOfInstallments",
+  "PaymentSystemName", "Name",
+];
+
+function pick(obj, keys) {
+  return Object.fromEntries(
+    keys.filter((key) => obj && obj[key] !== undefined).map((key) => [key, obj[key]]),
+  );
+}
+
+function slimItems(items) {
+  return (items || []).map((item) => ({
+    ...pick(item, [
+      "itemId", "name", "nameComplete", "complementName", "ean", "referenceId",
+      "measurementUnit", "unitMultiplier", "Videos", "variations",
+    ]),
+    // El resolver SKU.variations lee los valores de item[nombreVariación]
+    ...pick(item, item.variations || []),
+    images: (item.images || []).map((img) =>
+      pick(img, ["imageId", "imageLabel", "imageTag", "imageUrl", "imageText"]),
+    ),
+    sellers: (item.sellers || []).map((seller) => {
+      const offer = seller.commertialOffer || {};
+      return {
+        ...pick(seller, ["sellerId", "sellerName", "sellerDefault"]),
+        commertialOffer: {
+          ...pick(offer, OFFER_FIELDS),
+          Installments: (offer.Installments || []).map((i) =>
+            pick(i, INSTALLMENT_FIELDS),
+          ),
+        },
+      };
+    }),
+  }));
+}
+
 function extractProductSpecs(product) {
   const specs = [];
   if (product && Array.isArray(product.Especificaciones)) {
