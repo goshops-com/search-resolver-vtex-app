@@ -217,8 +217,9 @@ function transformProduct(product, baseUrl) {
     allSpecifications: product.allSpecifications,
     allSpecificationsGroups: product.allSpecificationsGroups,
     completeSpecifications: product.completeSpecifications,
-    // Sólo lo que leen el storefront y la app; se descartan PaymentOptions
-    // (lo más pesado), DeliverySlaSamples*, BuyTogether, PromotionTeasers, etc.
+    // Sólo los campos que expone el schema GraphQL de búsqueda de VTEX; se
+    // descartan PaymentOptions (lo más pesado), PriceToken (vence a los 30
+    // minutos), DeliverySlaSamples*, BuyTogether, PromotionTeasers, etc.
     items: (product.items || []).map((item) => ({
       itemId: item.itemId,
       name: item.name,
@@ -228,8 +229,6 @@ function transformProduct(product, baseUrl) {
       referenceId: item.referenceId,
       measurementUnit: item.measurementUnit,
       unitMultiplier: item.unitMultiplier,
-      modalType: item.modalType,
-      isKit: item.isKit,
       kitItems: item.kitItems,
       attachments: item.attachments,
       estimatedDateArrival: item.estimatedDateArrival,
@@ -259,18 +258,17 @@ function transformProduct(product, baseUrl) {
             RewardValue: offer.RewardValue,
             PriceValidUntil: offer.PriceValidUntil,
             AvailableQuantity: offer.AvailableQuantity,
-            IsAvailable: offer.IsAvailable,
             Tax: offer.Tax,
             Teasers: offer.Teasers,
             DiscountHighLight: offer.DiscountHighLight,
             GiftSkuIds: offer.GiftSkuIds,
-            PriceToken: offer.PriceToken,
             Installments: (offer.Installments || []).map((installment) => ({
               Value: installment.Value,
               InterestRate: installment.InterestRate,
               TotalValuePlusInterestRate: installment.TotalValuePlusInterestRate,
               NumberOfInstallments: installment.NumberOfInstallments,
               PaymentSystemName: installment.PaymentSystemName,
+              PaymentSystemGroupName: installment.PaymentSystemGroupName,
               Name: installment.Name,
             })),
           },

@@ -6,6 +6,14 @@ const body = { project_id: 'proj-1', query: 'laptop', limit: 200 }
 const ids = (count: number) =>
   Array.from({ length: count }, (_, index) => String(index + 1))
 
+const indexedHit = (id: string) => ({
+  id,
+  payload: {
+    id,
+    vtex_product: JSON.stringify({ productId: id, productName: `Indexed ${id}` }),
+  },
+})
+
 describe('fetchGoPersonalRankedIds', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -39,16 +47,90 @@ describe('fetchGoPersonalRankedIds', () => {
     expect(result.productIds).toEqual(['30', '10', '20'])
   })
 
-  it('does not pay for hit payloads it never reads', async () => {
+  it('reads the catalog products the sync indexed as vtex_product', async () => {
     const ctx = createContext({
-      gopersonalSettings: { search: { hits: [], product_ids: ids(5) } },
+      gopersonalSettings: {
+        search: {
+          search_id: 's-1',
+          product_ids: ['1', '2'],
+          hits: [indexedHit('1'), indexedHit('2')],
+        },
+      },
     })
 
-    await fetchGoPersonalRankedIds(ctx, body)
+    const result = await fetchGoPersonalRankedIds(ctx, body)
 
+    expect(result.indexedProducts.get('2')).toEqual({
+      productId: '2',
+      productName: 'Indexed 2',
+    })
     expect(ctx.clients.gopersonal.search).toHaveBeenCalledWith(
-      expect.objectContaining({ page_size: 1 })
+      expect.objectContaining({ page_size: 100 })
     )
+  })
+
+  it('pages through the rest of the ranked set for indexed products', async () => {
+    const ranked = ids(230)
+    const ctx = createContext({
+      gopersonalSettings: {
+        search: {
+          search_id: 's-1',
+          product_ids: ranked,
+          hits: ranked.slice(0, 100).map(indexedHit),
+        },
+        pages: {
+          2: { hits: ranked.slice(100, 200).map(indexedHit) },
+          3: { hits: ranked.slice(200).map(indexedHit) },
+        },
+      },
+    })
+
+    const result = await fetchGoPersonalRankedIds(ctx, body)
+
+    expect(ctx.clients.gopersonal.searchPage).toHaveBeenCalledTimes(2)
+    expect(ctx.clients.gopersonal.searchPage).toHaveBeenCalledWith({
+      project_id: 'proj-1',
+      search_id: 's-1',
+      page: 3,
+      page_size: 100,
+    })
+    expect(result.indexedProducts.size).toBe(230)
+  })
+
+  it('does not page a project whose sync does not index vtex_product', async () => {
+    const ctx = createContext({
+      gopersonalSettings: {
+        search: {
+          search_id: 's-1',
+          product_ids: ids(230),
+          hits: [{ id: 1, payload: { id: 1, name: 'plain hit' } }],
+        },
+      },
+    })
+
+    const result = await fetchGoPersonalRankedIds(ctx, body)
+
+    expect(ctx.clients.gopersonal.searchPage).not.toHaveBeenCalled()
+    expect(result.indexedProducts.size).toBe(0)
+  })
+
+  it('skips a malformed vtex_product instead of failing the search', async () => {
+    const ctx = createContext({
+      gopersonalSettings: {
+        search: {
+          search_id: 's-1',
+          product_ids: ['1', '2'],
+          hits: [
+            { id: 1, payload: { id: 1, vtex_product: '{not json' } },
+            indexedHit('2'),
+          ],
+        },
+      },
+    })
+
+    const result = await fetchGoPersonalRankedIds(ctx, body)
+
+    expect([...result.indexedProducts.keys()]).toEqual(['2'])
   })
 
   it('drops repeated ids so a product is never shown twice', async () => {

@@ -1,20 +1,22 @@
 import type {
+  GoPersonalHit,
   GoPersonalSearchBody,
   GoPersonalSearchResponse,
 } from '../clients/gopersonal/types'
 
-/**
- * `/search` caps this at 100. Only the ids are consumed downstream — products
- * come from the catalog — so the smallest page keeps the ranked ids from
- * arriving alongside a few hundred KB of hit payloads that are thrown away.
- */
-const GOPERSONAL_MIN_PAGE_SIZE = 1
+/** `/search` and `/search/page` cap a page at 100 hits. */
+const GOPERSONAL_MAX_PAGE_SIZE = 100
 
 export type GoPersonalRankedIds = {
   /** Every ranked product id, in ranking order and without repeats. */
   productIds: string[]
   searchId?: string
   totalResults: number
+  /**
+   * Catalog products the sync indexed as `vtex_product`, by product id. Ids
+   * missing here still have to be hydrated from the catalog.
+   */
+  indexedProducts: Map<string, SearchProduct>
 }
 
 /**
@@ -34,7 +36,7 @@ export async function fetchGoPersonalRankedIds(
 
   const response: GoPersonalSearchResponse = await gopersonal.search({
     ...body,
-    page_size: GOPERSONAL_MIN_PAGE_SIZE,
+    page_size: GOPERSONAL_MAX_PAGE_SIZE,
     return_all_ids: true,
   })
 
@@ -52,11 +54,69 @@ export async function fetchGoPersonalRankedIds(
     })
   }
 
+  const indexedProducts = readIndexedProducts(response.hits)
+
+  // A project whose sync does not index `vtex_product` is hydrated entirely
+  // from the catalog, so asking for the rest of its pages would be wasted.
+  if (indexedProducts.size > 0 && searchId) {
+    const pages = Math.ceil(productIds.length / GOPERSONAL_MAX_PAGE_SIZE)
+
+    const rest = await Promise.all(
+      Array.from({ length: pages - 1 }, (_, index) =>
+        gopersonal
+          .searchPage({
+            project_id: body.project_id,
+            search_id: searchId,
+            page: index + 2,
+            page_size: GOPERSONAL_MAX_PAGE_SIZE,
+          })
+          // A missing page only costs a catalog hydration for its ids.
+          .catch((error) => {
+            ctx.vtex.logger.warn({
+              message: 'GoPersonal: failed to fetch a /search/page',
+              error: error.message,
+              searchId,
+              page: index + 2,
+            })
+
+            return { hits: [] }
+          })
+      )
+    )
+
+    rest.forEach((page) => {
+      readIndexedProducts(page.hits).forEach((product, id) => {
+        indexedProducts.set(id, product)
+      })
+    })
+  }
+
   return {
     productIds,
     searchId,
     totalResults: response.total_results ?? productIds.length,
+    indexedProducts,
   }
+}
+
+function readIndexedProducts(hits: GoPersonalHit[] = []) {
+  const products = new Map<string, SearchProduct>()
+
+  hits.forEach(({ payload }) => {
+    if (typeof payload?.vtex_product !== 'string') {
+      return
+    }
+
+    try {
+      const product = JSON.parse(payload.vtex_product) as SearchProduct
+
+      products.set(String(product.productId), product)
+    } catch {
+      // A malformed payload falls back to the catalog like a missing one.
+    }
+  })
+
+  return products
 }
 
 function dedupe(ids: Array<string | number>): string[] {

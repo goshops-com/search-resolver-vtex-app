@@ -121,7 +121,6 @@ function transformProducts(products) {
                 complementName: item.complementName || "",
                 ean: item.ean || "",
                 referenceId: item.referenceId || [],
-                isKit: Boolean(item.isKit),
                 kitItems: item.kitItems || [],
                 attachments: item.attachments || [],
                 Videos: item.Videos || [],

@@ -374,7 +374,7 @@ describe('fetchProductSearch service', () => {
         project_id: 'proj-2',
         query: 'test query',
         limit: config.gopersonal.limit,
-        page_size: 1,
+        page_size: 100,
         return_all_ids: true,
       })
     })

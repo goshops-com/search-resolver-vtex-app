@@ -87,4 +87,61 @@ describe('fetchGoPersonalResultSet', () => {
     expect(ctx.clients.gopersonal.search).toHaveBeenCalledTimes(2)
     now.mockRestore()
   })
+
+  it('only hydrates from the catalog the products the sync did not index', async () => {
+    const ctx = pageContext({
+      gopersonalSettings: {
+        search: {
+          search_id: 's-1',
+          product_ids: ['2', '1'],
+          hits: [
+            {
+              id: '2',
+              payload: {
+                id: '2',
+                vtex_product: JSON.stringify({
+                  productId: '2',
+                  productName: 'Indexed 2',
+                }),
+              },
+            },
+          ],
+        },
+      },
+    })
+
+    const { products } = await fetchGoPersonalResultSet(ctx, options)
+
+    expect(ctx.clients.search.productsById).toHaveBeenCalledWith(
+      ['1'],
+      undefined,
+      undefined
+    )
+    expect(products.map((p) => p.productName)).toEqual([
+      'Indexed 2',
+      'Catalog 1',
+    ])
+  })
+
+  it('skips the catalog when every ranked product was indexed', async () => {
+    const indexed = (id: string) => ({
+      id,
+      payload: { id, vtex_product: JSON.stringify({ productId: id }) },
+    })
+
+    const ctx = pageContext({
+      gopersonalSettings: {
+        search: {
+          search_id: 's-1',
+          product_ids: ['2', '1'],
+          hits: [indexed('2'), indexed('1')],
+        },
+      },
+    })
+
+    const { products } = await fetchGoPersonalResultSet(ctx, options)
+
+    expect(ctx.clients.search.productsById).not.toHaveBeenCalled()
+    expect(products.map((p) => p.productId)).toEqual(['2', '1'])
+  })
 })

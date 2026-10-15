@@ -16,6 +16,14 @@ export interface GoPersonalSearchBody {
   return_all_ids?: boolean
 }
 
+/** Request body for `POST /search/page`: another page of a ranked set. */
+export interface GoPersonalSearchPageBody {
+  project_id: string
+  search_id: string
+  page: number
+  page_size: number
+}
+
 /** A single image entry inside a hit payload. */
 export interface GoPersonalImage {
   url: string
@@ -55,6 +63,8 @@ export interface GoPersonalHitPayload {
   metadata?: GoPersonalMetadata[]
   stock?: string
   active?: number | string
+  /** The VTEX catalog product, as a JSON string, when the sync indexes it. */
+  vtex_product?: string
   [key: string]: unknown
 }
 
