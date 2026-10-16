@@ -5,7 +5,6 @@ import { config } from '../../config'
 
 import type {
   GoPersonalSearchBody,
-  GoPersonalSearchPageBody,
   GoPersonalSearchResponse,
 } from './types'
 
@@ -25,14 +24,6 @@ export class GoPersonal extends ExternalClient {
   ): Promise<GoPersonalSearchResponse> {
     return this.http.post('/search', body, {
       metric: 'gopersonal-search',
-    })
-  }
-
-  public async searchPage(
-    body: GoPersonalSearchPageBody
-  ): Promise<GoPersonalSearchResponse> {
-    return this.http.post('/search/page', body, {
-      metric: 'gopersonal-search-page',
     })
   }
 }

@@ -7,21 +7,13 @@ export interface GoPersonalSearchBody {
   query?: string
   /** Size of the ranked set GoPersonal computes and stores. Capped at 2000. */
   limit?: number
-  /** Hits returned by this call. Capped at 100. */
+  /** Hits returned by this call. Capped at 250. */
   page_size?: number
   reranker?: string
   customer_id?: string
   session_id?: string
   /** Returns `product_ids` with every ranked id, not just the current page. */
   return_all_ids?: boolean
-}
-
-/** Request body for `POST /search/page`: another page of a ranked set. */
-export interface GoPersonalSearchPageBody {
-  project_id: string
-  search_id: string
-  page: number
-  page_size: number
 }
 
 /** A single image entry inside a hit payload. */

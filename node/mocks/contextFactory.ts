@@ -28,7 +28,6 @@ export function createContext<Ctx = Context>({
   intelligentSearchApiSettings?: IntelligentSearchClientArgs
   gopersonalSettings?: {
     search?: any
-    pages?: Record<number, any>
   }
   catalogProducts?: any[]
   specificationFields?: Record<string, Partial<SpecificationField>>
@@ -76,11 +75,6 @@ export function createContext<Ctx = Context>({
           .fn()
           .mockResolvedValue(
             gopersonalSettings?.search ?? { hits: [], product_ids: [] }
-          ),
-        searchPage: jest
-          .fn()
-          .mockImplementation(({ page }: { page: number }) =>
-            Promise.resolve(gopersonalSettings?.pages?.[page] ?? { hits: [] })
           ),
       },
       search: {

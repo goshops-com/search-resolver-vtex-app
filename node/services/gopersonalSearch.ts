@@ -4,8 +4,8 @@ import type {
   GoPersonalSearchResponse,
 } from '../clients/gopersonal/types'
 
-/** `/search` and `/search/page` cap a page at 100 hits. */
-const GOPERSONAL_MAX_PAGE_SIZE = 100
+/** `/search` answers at most 250 hits in a single page. */
+const GOPERSONAL_MAX_PAGE_SIZE = 250
 
 export type GoPersonalRankedIds = {
   /** Every ranked product id, in ranking order and without repeats. */
@@ -14,7 +14,8 @@ export type GoPersonalRankedIds = {
   totalResults: number
   /**
    * Catalog products the sync indexed as `vtex_product`, by product id. Ids
-   * missing here still have to be hydrated from the catalog.
+   * missing here (a project whose sync does not index it, or ranked past the
+   * first page) still have to be hydrated from the catalog.
    */
   indexedProducts: Map<string, SearchProduct>
 }
@@ -23,10 +24,8 @@ export type GoPersonalRankedIds = {
  * Ranks a query and returns every product id GoPersonal matched.
  *
  * `return_all_ids` answers the whole ranked set in the `/search` call itself,
- * so the ids no longer have to be assembled from `/search/page`. That removes
- * both the extra round trips and their race: `/search` stores the ranked set to
- * S3 asynchronously, so a page requested right after it could 404 and silently
- * truncate the result set.
+ * and a single page of up to 250 hits carries each product's `vtex_product`,
+ * so a default-sized ranked set is answered without paging or hydrating.
  */
 export async function fetchGoPersonalRankedIds(
   ctx: Context,
@@ -55,41 +54,6 @@ export async function fetchGoPersonalRankedIds(
   }
 
   const indexedProducts = readIndexedProducts(response.hits)
-
-  // A project whose sync does not index `vtex_product` is hydrated entirely
-  // from the catalog, so asking for the rest of its pages would be wasted.
-  if (indexedProducts.size > 0 && searchId) {
-    const pages = Math.ceil(productIds.length / GOPERSONAL_MAX_PAGE_SIZE)
-
-    const rest = await Promise.all(
-      Array.from({ length: pages - 1 }, (_, index) =>
-        gopersonal
-          .searchPage({
-            project_id: body.project_id,
-            search_id: searchId,
-            page: index + 2,
-            page_size: GOPERSONAL_MAX_PAGE_SIZE,
-          })
-          // A missing page only costs a catalog hydration for its ids.
-          .catch((error) => {
-            ctx.vtex.logger.warn({
-              message: 'GoPersonal: failed to fetch a /search/page',
-              error: error.message,
-              searchId,
-              page: index + 2,
-            })
-
-            return { hits: [] }
-          })
-      )
-    )
-
-    rest.forEach((page) => {
-      readIndexedProducts(page.hits).forEach((product, id) => {
-        indexedProducts.set(id, product)
-      })
-    })
-  }
 
   return {
     productIds,
