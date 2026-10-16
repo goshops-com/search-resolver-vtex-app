@@ -7,6 +7,93 @@ import type {
 /** `/search` answers at most 250 hits in a single page. */
 const GOPERSONAL_MAX_PAGE_SIZE = 250
 
+/**
+ * GoPersonal lowercases every key of `vtex_product` when indexing it, so the
+ * catalog casing is restored from this table. Keys missing here (`brand`,
+ * `items`, dynamic specification names…) are already right in lowercase.
+ */
+const INDEXED_PRODUCT_KEYS: Record<string, string> = {
+  productid: 'productId',
+  productname: 'productName',
+  producttitle: 'productTitle',
+  productreference: 'productReference',
+  productreferencecode: 'productReferenceCode',
+  brandid: 'brandId',
+  brandimageurl: 'brandImageUrl',
+  linktext: 'linkText',
+  categoryid: 'categoryId',
+  categoriesids: 'categoriesIds',
+  metatagdescription: 'metaTagDescription',
+  releasedate: 'releaseDate',
+  clusterhighlights: 'clusterHighlights',
+  productclusters: 'productClusters',
+  searchableclusters: 'searchableClusters',
+  allspecifications: 'allSpecifications',
+  allspecificationsgroups: 'allSpecificationsGroups',
+  completespecifications: 'completeSpecifications',
+  itemid: 'itemId',
+  namecomplete: 'nameComplete',
+  complementname: 'complementName',
+  referenceid: 'referenceId',
+  measurementunit: 'measurementUnit',
+  unitmultiplier: 'unitMultiplier',
+  kititems: 'kitItems',
+  estimateddatearrival: 'estimatedDateArrival',
+  videos: 'Videos',
+  imageid: 'imageId',
+  imagelabel: 'imageLabel',
+  imagetag: 'imageTag',
+  imageurl: 'imageUrl',
+  imagetext: 'imageText',
+  sellerid: 'sellerId',
+  sellername: 'sellerName',
+  sellerdefault: 'sellerDefault',
+  addtocartlink: 'addToCartLink',
+  commertialoffer: 'commertialOffer',
+  fieldid: 'fieldId',
+  isonproductdetails: 'isOnProductDetails',
+  listprice: 'listPrice',
+  pricewithoutdiscount: 'priceWithoutDiscount',
+  rewardvalue: 'rewardValue',
+  pricevaliduntil: 'priceValidUntil',
+  availablequantity: 'availableQuantity',
+  isavailable: 'isAvailable',
+  discounthighlight: 'discountHighLight',
+  giftskuids: 'giftSkuIds',
+  interestrate: 'interestRate',
+  totalvalueplusinterestrate: 'totalValuePlusInterestRate',
+  numberofinstallments: 'numberOfInstallments',
+  paymentsystemname: 'paymentSystemName',
+  paymentsystemgroupname: 'paymentSystemGroupName',
+}
+
+/**
+ * Keys that tell apart the catalog objects written in PascalCase: the
+ * commercial offer, its installments, specifications and their values, and
+ * reference ids.
+ */
+const PASCAL_CASE_MARKERS = [
+  'availablequantity',
+  'numberofinstallments',
+  'fieldid',
+  'key',
+]
+
+/**
+ * Display texts GoPersonal also lowercases. Their original casing cannot be
+ * recovered, so the first letter is capitalized until the index keeps it.
+ */
+const CAPITALIZED_FIELDS = new Set([
+  'productName',
+  'productTitle',
+  'brand',
+  'name',
+  'nameComplete',
+  'imageLabel',
+  'Name',
+  'Value',
+])
+
 export type GoPersonalRankedIds = {
   /** Every ranked product id, in ranking order and without repeats. */
   productIds: string[]
@@ -72,7 +159,54 @@ function readIndexedProducts(hits: GoPersonalHit[] = []) {
     }
 
     try {
-      const product = JSON.parse(payload.vtex_product) as SearchProduct
+      // Restores the casing GoPersonal drops; an already camelCased payload
+      // goes through untouched.
+      const product = JSON.parse(payload.vtex_product, (_key, value) => {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) {
+          return value
+        }
+
+        const keys = Object.keys(value)
+        const pascalCase =
+          PASCAL_CASE_MARKERS.some((marker) => keys.includes(marker)) ||
+          (keys.includes('value') && keys.includes('position'))
+
+        return Object.fromEntries(
+          keys.map((key) => {
+            const camelKey = INDEXED_PRODUCT_KEYS[key] ?? key
+            const name =
+              pascalCase && camelKey !== key
+                ? camelKey.charAt(0).toUpperCase() + camelKey.slice(1)
+                : pascalCase && /^[a-z]+$/.test(key)
+                ? key.charAt(0).toUpperCase() + key.slice(1)
+                : camelKey
+
+            const entry = value[key]
+
+            // A reference id's `Value` is a code, not a display text.
+            if (
+              typeof entry === 'string' &&
+              CAPITALIZED_FIELDS.has(name) &&
+              !keys.includes('key')
+            ) {
+              return [name, entry.charAt(0).toUpperCase() + entry.slice(1)]
+            }
+
+            if (name === 'categories' && Array.isArray(entry)) {
+              return [
+                name,
+                entry.map((path: unknown) =>
+                  typeof path === 'string'
+                    ? path.replace(/\/(\p{L})/gu, (match) => match.toUpperCase())
+                    : path
+                ),
+              ]
+            }
+
+            return [name, entry]
+          })
+        )
+      }) as SearchProduct
 
       products.set(String(product.productId), product)
     } catch {
