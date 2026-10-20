@@ -117,6 +117,7 @@ duplicate specifications.
 | Setting | Default | What it does |
 | --- | --- | --- |
 | Use GoPersonal as the search engine | unchecked | The only place the engine is chosen. Unticked, full-text queries go to VTEX Intelligent Search. It also falls back to VTEX on its own when no project id is set, so an install keeps Intelligent Search until both are set. |
+| Follow the search redirects configured in Intelligent Search | checked | When checked, a bare search term that Intelligent Search would redirect (e.g. to a category) is answered with that redirect instead of GoPersonal. Brand routes from redirects stay brand listing pages. When unchecked, routed brands are treated as text searches so GoPersonal can rank the term. |
 | GoPersonal project id | *(empty)* | The GoPersonal project answering queries. |
 | Brand filter title | `Marca` | Title of the brand filter. Specifications with this same name are dropped, since they duplicate the brand the product already carries. |
 | Price filter title | `Precio` | Title of the price range filter. |

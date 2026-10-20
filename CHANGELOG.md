@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-10-20
+
+### Added
+
+- `followSearchRedirects` app setting to honor Intelligent Search term redirects on GoPersonal PLPs (default: enabled).
+
+### Changed
+
+- Share one GoPersonal ranked and hydrated result set between `productSearch` and `facets` so listing pages pay once for ranking and catalog hydration.
+- Build facets from catalog specification fields flagged as filterable (`IsFilter`), with a VBase-backed map to avoid repeated lookups.
+- Brand vs text-search routing on listing pages respects `followSearchRedirects`: brand pages stay PLPs when redirects are followed; unchecking promotes routed brands to text search for GoPersonal ranking.
+
 ## [1.104.0] - 2026-05-25
 
 ### Added
