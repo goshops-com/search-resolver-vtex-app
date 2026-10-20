@@ -503,18 +503,31 @@ export const queries = {
       getCompatibilityArgsFromSelectedFacets(ctx, args)
     )
 
-    if (!args.fullText) {
-      args.fullText =
-        getFullTextFromMap(args.query, args.map) ??
-        getFullTextFromSelectedFacets(args.selectedFacets) ??
-        getFullTextFromRoutedBrand(args.query, args.map)
-    }
+    // Following the store's search redirects also means answering a term VTEX
+    // routed to a brand the way the native search does: as that brand's page,
+    // left to Intelligent Search, instead of searching the brand as text.
+    const { followSearchRedirects } = await fetchAppSettings(ctx)
 
-    args.selectedFacets = replaceRoutedBrandWithTerm(
-      args.selectedFacets,
-      args.fullText,
-      hadExplicitFullText
-    )
+    if (
+      followSearchRedirects &&
+      !hadExplicitFullText &&
+      getFullTextFromRoutedBrand(args.query, args.map)
+    ) {
+      args.fullText = undefined
+    } else {
+      if (!args.fullText) {
+        args.fullText =
+          getFullTextFromMap(args.query, args.map) ??
+          getFullTextFromSelectedFacets(args.selectedFacets) ??
+          getFullTextFromRoutedBrand(args.query, args.map)
+      }
+
+      args.selectedFacets = replaceRoutedBrandWithTerm(
+        args.selectedFacets,
+        args.fullText,
+        hadExplicitFullText
+      )
+    }
 
     const { selectedFacets } = args
 
@@ -630,18 +643,31 @@ export const queries = {
       })
     }
 
-    if (!args.fullText) {
-      args.fullText =
-        getFullTextFromMap(args.query, args.map) ??
-        getFullTextFromSelectedFacets(args.selectedFacets) ??
-        getFullTextFromRoutedBrand(args.query, args.map)
-    }
+    // Following the store's search redirects also means answering a term VTEX
+    // routed to a brand the way the native search does: as that brand's page,
+    // left to Intelligent Search, instead of searching the brand as text.
+    const { followSearchRedirects } = await fetchAppSettings(ctx)
 
-    args.selectedFacets = replaceRoutedBrandWithTerm(
-      args.selectedFacets,
-      args.fullText,
-      hadExplicitFullText
-    )
+    if (
+      followSearchRedirects &&
+      !hadExplicitFullText &&
+      getFullTextFromRoutedBrand(args.query, args.map)
+    ) {
+      args.fullText = undefined
+    } else {
+      if (!args.fullText) {
+        args.fullText =
+          getFullTextFromMap(args.query, args.map) ??
+          getFullTextFromSelectedFacets(args.selectedFacets) ??
+          getFullTextFromRoutedBrand(args.query, args.map)
+      }
+
+      args.selectedFacets = replaceRoutedBrandWithTerm(
+        args.selectedFacets,
+        args.fullText,
+        hadExplicitFullText
+      )
+    }
 
     const { selectedFacets } = args
 

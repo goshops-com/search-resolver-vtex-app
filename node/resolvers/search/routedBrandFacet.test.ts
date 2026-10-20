@@ -28,9 +28,18 @@ const searchCall = () => asMock(fetchProductSearch).mock.calls[0]
 beforeEach(() => {
   jest.clearAllMocks()
   resetContext()
+  asMock(mockContext.clients.apps.getAppSettings).mockResolvedValue({})
 })
 
 describe('brand facet added by VTEX routing', () => {
+  // Searching the routed brand as text is what GoPersonal needs; it only
+  // happens once the store stops following its search redirects.
+  beforeEach(() => {
+    asMock(mockContext.clients.apps.getAppSettings).mockResolvedValue({
+      followSearchRedirects: false,
+    })
+  })
+
   test('searching a term that is also a brand does not filter by that brand', async () => {
     expandsTo('b,ft')
 
@@ -148,6 +157,14 @@ describe('brand facet added by VTEX routing', () => {
 })
 
 describe('brand page routed without a search term', () => {
+  // Searching the routed brand as text is what GoPersonal needs; it only
+  // happens once the store stops following its search redirects.
+  beforeEach(() => {
+    asMock(mockContext.clients.apps.getAppSettings).mockResolvedValue({
+      followSearchRedirects: false,
+    })
+  })
+
   test('a bare brand page searches the brand as text', async () => {
     await queries.productSearch(
       {},
@@ -313,5 +330,62 @@ describe('brand page routed without a search term', () => {
       { key: 'productClusterIds', value: '1382' },
       { key: 'brandId', value: '2000045' },
     ])
+  })
+})
+
+describe('routed brand while following the search redirects (default)', () => {
+  test('a term routed to a brand is answered as that brand page', async () => {
+    expandsTo('b,ft')
+
+    await queries.productSearch(
+      {},
+      {
+        query: 'jbl',
+        map: '',
+        selectedFacets: [{ key: 'b', value: 'jbl' }],
+      } as any,
+      mockContext as any
+    )
+
+    const [, args, selectedFacets] = searchCall()
+
+    expect(args.fullText).toBeUndefined()
+    expect(selectedFacets).toEqual([{ key: 'b', value: 'jbl' }])
+  })
+
+  test('the facets query keeps the brand page as well', async () => {
+    await queries.facets(
+      {},
+      {
+        query: 'jbl',
+        map: 'b',
+        selectedFacets: [{ key: 'b', value: 'jbl' }],
+      } as any,
+      mockContext as any
+    )
+
+    const [, { args, selectedFacets }] = asMock(fetchFacets).mock.calls[0]
+
+    expect(args.fullText).toBeUndefined()
+    expect(selectedFacets).toEqual([{ key: 'b', value: 'jbl' }])
+  })
+
+  test('a search the shopper typed is still a search', async () => {
+    await queries.productSearch(
+      {},
+      {
+        query: 'audifonos/jbl',
+        map: 'ft,b',
+        selectedFacets: [
+          { key: 'ft', value: 'audifonos' },
+          { key: 'b', value: 'jbl' },
+        ],
+      } as any,
+      mockContext as any
+    )
+
+    const [, args] = searchCall()
+
+    expect(args.fullText).toBe('audifonos')
   })
 })
