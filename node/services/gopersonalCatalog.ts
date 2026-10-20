@@ -1,5 +1,3 @@
-import { timed } from './timing'
-
 /**
  * The catalog `/pub/products/search` endpoint answers at most 50 records per
  * call regardless of how many `fq` clauses are sent, so id lists are split.
@@ -60,21 +58,18 @@ export async function hydrateProductsFromCatalog(
   const vtexSegment = ctx.vtex.segmentToken
 
   const batches = await Promise.all(
-    chunk(productIds, CATALOG_IDS_PER_REQUEST).map((ids, index) =>
-      timed(
-        ctx,
-        `catalog.batch${index}`,
-        () => search.productsById(ids, vtexSegment, salesChannel),
-        (products) => ({ ids: ids.length, found: products.length })
-      ).catch((error) => {
-        ctx.vtex.logger.error({
-          message: 'GoPersonal: failed to hydrate products from catalog',
-          error: error.message,
-          idsCount: ids.length,
-        })
+    chunk(productIds, CATALOG_IDS_PER_REQUEST).map((ids) =>
+      search
+        .productsById(ids, vtexSegment, salesChannel)
+        .catch((error) => {
+          ctx.vtex.logger.error({
+            message: 'GoPersonal: failed to hydrate products from catalog',
+            error: error.message,
+            idsCount: ids.length,
+          })
 
-        return [] as SearchProduct[]
-      })
+          return [] as SearchProduct[]
+        })
     )
   )
 

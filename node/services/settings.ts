@@ -37,7 +37,7 @@ type StoredSettings = Partial<{
 }>
 
 export const GOPERSONAL_DEFAULTS = {
-  gopersonalProjectId: '6a91a8f3a5da3cc7150a4c03',
+  gopersonalProjectId: '',
   gopersonalLimit: config.gopersonal.limit,
 }
 

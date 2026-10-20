@@ -1,5 +1,5 @@
 {
-  "vendor": "coolboxpe",
+  "vendor": "youraccount",
   "name": "gopersonal-search-resolver",
   "version": "2.0.0",
   "title": "GoPersonal Search Resolver",
@@ -34,8 +34,7 @@
       },
       "gopersonalProjectId": {
         "title": "GoPersonal project id",
-        "type": "string",
-        "default": "6a91a8f3a5da3cc7150a4c03"
+        "type": "string"
       },
       "brandGroupName": {
         "title": "Brand filter title",
@@ -150,13 +149,6 @@
     },
     {
       "name": "vtex.messages:graphql-translate-messages"
-    },
-    {
-      "name": "outbound-access",
-      "attrs": {
-        "host": "4fd8a73b-2965-48eb-b0eb-9b3d1e637c3e-0ee1437348259ac3-preview.apps.calvincode.net",
-        "path": "/*"
-      }
     }
   ],
   "$schema": "https://raw.githubusercontent.com/vtex/node-vtex-api/master/gen/manifest.schema"

@@ -14,7 +14,6 @@ import {
   filterProductsBySelectedFacets,
 } from './gopersonalLocalFacets'
 import { fetchGoPersonalResultSet } from './gopersonalResultSet'
-import { recordSpan, timed, timedSync } from './timing'
 import { searchSlugify } from '../utils/slug'
 
 type SegmentData = ReturnType<typeof extractSegmentData>
@@ -105,28 +104,18 @@ async function fetchFacetsFromGoPersonal(
     limit: settings.gopersonalLimit,
   })
 
-  const facets = timedSync(ctx, 'local.buildFacets', () =>
-    buildFacetsFromProducts(
-      products,
-      settings.facets,
-      selectedFacets,
-      filterableFieldIds
-    )
+  const facets = buildFacetsFromProducts(
+    products,
+    settings.facets,
+    selectedFacets,
+    filterableFieldIds
   )
 
-  const recordsFiltered = timedSync(
-    ctx,
-    'local.filter',
-    () =>
-      filterProductsBySelectedFacets(products, selectedFacets, filterableFieldIds)
-        .length
-  )
-
-  recordSpan(ctx, 'local.page', Date.now(), {
-    hydrated: products.length,
-    recordsFiltered,
-    facetGroups: facets.length,
-  })
+  const recordsFiltered = filterProductsBySelectedFacets(
+    products,
+    selectedFacets,
+    filterableFieldIds
+  ).length
 
   // Same shape Intelligent Search answers: one crumb per selected facet, each
   // linking to the search narrowed down to it, and named after the facet value
@@ -173,7 +162,7 @@ async function fetchFacetsFromGoPersonal(
  */
 export async function fetchFacets(ctx: Context, options: FetchFacetsOptions) {
   const { searchEngine, gopersonalProjectId, gopersonalLimit, facets } =
-    await timed(ctx, 'settings', () => fetchAppSettings(ctx))
+    await fetchAppSettings(ctx)
 
   if (options.args.fullText?.trim() && searchEngine === 'gopersonal') {
     return fetchFacetsFromGoPersonal(ctx, options, {
@@ -193,7 +182,5 @@ export async function fetchFacets(ctx: Context, options: FetchFacetsOptions) {
     })
   }
 
-  return timed(ctx, 'intsch.facets', () =>
-    fetchFacetsFromIntsch(ctx, options, segmentData)
-  )
+  return fetchFacetsFromIntsch(ctx, options, segmentData)
 }

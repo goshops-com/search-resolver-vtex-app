@@ -27,7 +27,6 @@ import {
   filterProductsBySelectedFacets,
 } from './gopersonalLocalFacets'
 import { fetchGoPersonalResultSet } from './gopersonalResultSet'
-import { recordSpan, timed, timedSync } from './timing'
 
 type SegmentData = ReturnType<typeof extractSegmentData>
 
@@ -512,28 +511,22 @@ async function fetchProductSearchFromGoPersonal(
 
   // Facets describe the unfiltered result set so every value stays selectable
   // after the shopper picks one.
-  const facets = timedSync(ctx, 'local.buildFacets', () =>
-    buildFacetsFromProducts(
-      ranked,
-      settings.facets,
-      selectedFacets,
-      filterableFieldIds
-    )
+  const facets = buildFacetsFromProducts(
+    ranked,
+    settings.facets,
+    selectedFacets,
+    filterableFieldIds
   )
 
-  const filtered = timedSync(ctx, 'local.filter', () =>
-    filterProductsBySelectedFacets(ranked, selectedFacets, filterableFieldIds)
+  const filtered = filterProductsBySelectedFacets(
+    ranked,
+    selectedFacets,
+    filterableFieldIds
   )
 
   const from = args.from ?? 0
   const to = args.to ?? from + filtered.length - 1
   const page = filtered.slice(from, to + 1)
-
-  recordSpan(ctx, 'local.page', Date.now(), {
-    hydrated: ranked.length,
-    recordsFiltered: filtered.length,
-    returned: page.length,
-  })
 
   return {
     searchState: args.searchState,
@@ -577,7 +570,7 @@ export async function fetchProductSearch(
     gopersonalLimit,
     followSearchRedirects,
     facets,
-  } = await timed(ctx, 'settings', () => fetchAppSettings(ctx))
+  } = await fetchAppSettings(ctx)
 
   const hasFullTextQuery = Boolean(args.fullText?.trim())
 
@@ -597,20 +590,18 @@ export async function fetchProductSearch(
     const onlyTerm = selectedFacets.every((facet) => facet.key === 'ft')
 
     if (followSearchRedirects && onlyTerm) {
-      const redirect = await timed(ctx, 'intsch.redirect', () =>
-        ctx.clients.intsch
-          .productSearch(
-            {
-              query: args.fullText,
-              from: 0,
-              to: 0,
-              salesChannel: args.salesChannel,
-            },
-            ''
-          )
-          .then((result) => result.redirect)
-          .catch(() => undefined)
-      )
+      const redirect = await ctx.clients.intsch
+        .productSearch(
+          {
+            query: args.fullText,
+            from: 0,
+            to: 0,
+            salesChannel: args.salesChannel,
+          },
+          ''
+        )
+        .then((result) => result.redirect)
+        .catch(() => undefined)
 
       if (redirect) {
         // Nobody awaits the ranking anymore; keep its failure from going
@@ -651,14 +642,12 @@ export async function fetchProductSearch(
   }
 
   if (shouldUseNewPLPEndpoint) {
-    const result = await timed(ctx, 'intsch.productSearch', () =>
-      fetchProductSearchFromIntsch(
-        ctx,
-        args,
-        selectedFacets,
-        shippingOptions,
-        segmentData
-      )
+    const result = await fetchProductSearchFromIntsch(
+      ctx,
+      args,
+      selectedFacets,
+      shippingOptions,
+      segmentData
     )
 
     logSponsoredProducts(ctx, result)

@@ -12,7 +12,6 @@ import {
   fetchTopSearches,
 } from '../../services/autocomplete'
 import { fetchBanners } from '../../services/banners'
-import { debugLog } from '../../services/debugLog'
 import { fetchFacets } from '../../services/facets'
 import type {
   ProductArgs,
@@ -25,7 +24,6 @@ import {
 } from '../../services/product'
 import { fetchProductSearch } from '../../services/productSearch'
 import { fetchAppSettings } from '../../services/settings'
-import { startRequestTiming, timed } from '../../services/timing'
 import type {
   FacetsInput,
   ProductSearchInput,
@@ -205,6 +203,52 @@ const replaceRoutedBrandWithTerm = (
   return kept.some((facet) => facet.key === 'ft')
     ? kept
     : [...kept, { key: 'ft', value: fullText }]
+}
+
+/**
+ * Derives `fullText` and may rewrite routed brand facets into an `ft` segment.
+ *
+ * When the store follows Intelligent Search redirects, a term that IS also a
+ * brand should stay on the brand page (`b` only). Promoting that route to a
+ * text search happens only when `followSearchRedirects` is off — which is what
+ * GoPersonal needs to rank the term instead of the brand catalogue.
+ */
+type RouteFullTextArgs = FullTextSignalArgs & {
+  query?: string
+  map?: string
+}
+
+const applyFullTextAndBrandRouting = async <T extends RouteFullTextArgs>(
+  ctx: Context,
+  args: T,
+  hadExplicitFullText: boolean
+): Promise<T> => {
+  const { followSearchRedirects } = await fetchAppSettings(ctx)
+
+  if (!args.fullText) {
+    if (followSearchRedirects) {
+      args.fullText =
+        (hadExplicitFullText
+          ? getFullTextFromMap(args.query, args.map)
+          : undefined) ??
+        getFullTextFromSelectedFacets(args.selectedFacets)
+    } else {
+      args.fullText =
+        getFullTextFromMap(args.query, args.map) ??
+        getFullTextFromSelectedFacets(args.selectedFacets) ??
+        getFullTextFromRoutedBrand(args.query, args.map)
+    }
+  }
+
+  if (!followSearchRedirects) {
+    args.selectedFacets = replaceRoutedBrandWithTerm(
+      args.selectedFacets,
+      args.fullText,
+      hadExplicitFullText
+    )
+  }
+
+  return args
 }
 
 export const getCompatibilityArgs = async <T extends QueryArgs>(
@@ -476,22 +520,6 @@ export const queries = {
     }
   },
   facets: async (_: unknown, args: FacetsInput, ctx: Context) => {
-    // Eliminar cuando se pase a main
-    debugLog(ctx, 'facets:input', {
-      _,
-      args,
-      ctx
-    })
-
-    // Eliminar cuando se pase a main
-    startRequestTiming(ctx, 'facets', {
-      fullText: args.fullText,
-      query: args.query,
-      map: args.map,
-      selectedFacets: args.selectedFacets?.length ?? 0,
-    })
-
-    // Separa shipping del resto de los facets
     const [shippingOptions, facets] = getShippingOptionsFromSelectedFacets(
       args.selectedFacets
     )
@@ -499,49 +527,16 @@ export const queries = {
     args.selectedFacets = facets
     const hadExplicitFullText = hasExplicitFullText(args)
 
-    args = await timed(ctx, 'compatibilityArgs', () =>
-      getCompatibilityArgsFromSelectedFacets(ctx, args)
-    )
-
-    // Following the store's search redirects also means answering a term VTEX
-    // routed to a brand the way the native search does: as that brand's page,
-    // left to Intelligent Search, instead of searching the brand as text.
-    const { followSearchRedirects } = await fetchAppSettings(ctx)
-
-    if (
-      followSearchRedirects &&
-      !hadExplicitFullText &&
-      getFullTextFromRoutedBrand(args.query, args.map)
-    ) {
-      args.fullText = undefined
-    } else {
-      if (!args.fullText) {
-        args.fullText =
-          getFullTextFromMap(args.query, args.map) ??
-          getFullTextFromSelectedFacets(args.selectedFacets) ??
-          getFullTextFromRoutedBrand(args.query, args.map)
-      }
-
-      args.selectedFacets = replaceRoutedBrandWithTerm(
-        args.selectedFacets,
-        args.fullText,
-        hadExplicitFullText
-      )
-    }
+    args = await getCompatibilityArgsFromSelectedFacets(ctx, args)
+    args = await applyFullTextAndBrandRouting(ctx, args, hadExplicitFullText)
 
     const { selectedFacets } = args
 
-    const result = await fetchFacets(ctx, {
+    return fetchFacets(ctx, {
       args,
       selectedFacets: selectedFacets ?? [],
       shippingOptions,
     })
-
-    debugLog(ctx, 'facets:output', {
-      result
-    })
-
-    return result
   },
 
   product: async (_: any, rawArgs: ProductArgs, ctx: Context) => {
@@ -606,23 +601,6 @@ export const queries = {
   },
 
   productSearch: async (_: unknown, args: ProductSearchInput, ctx: Context) => {
-    // Eliminar cuando se pase a main
-    debugLog(ctx, 'productSearch:input', {
-      _,
-      args,
-      ctx
-    })
-
-    // Eliminar cuando se pase a main
-    startRequestTiming(ctx, 'productSearch', {
-      fullText: args.fullText,
-      query: args.query,
-      map: args.map,
-      selectedFacets: args.selectedFacets?.length ?? 0,
-      from: args.from,
-      to: args.to,
-    })
-
     const [shippingOptions, facets] = getShippingOptionsFromSelectedFacets(
       args.selectedFacets
     )
@@ -631,9 +609,7 @@ export const queries = {
 
     const hadExplicitFullText = hasExplicitFullText(args)
 
-    args = await timed(ctx, 'compatibilityArgs', () =>
-      getCompatibilityArgsFromSelectedFacets(ctx, args)
-    )
+    args = await getCompatibilityArgsFromSelectedFacets(ctx, args)
 
     if (!validMapAndQuery(args.query, args.map)) {
       ctx.vtex.logger.warn({
@@ -643,45 +619,11 @@ export const queries = {
       })
     }
 
-    // Following the store's search redirects also means answering a term VTEX
-    // routed to a brand the way the native search does: as that brand's page,
-    // left to Intelligent Search, instead of searching the brand as text.
-    const { followSearchRedirects } = await fetchAppSettings(ctx)
-
-    if (
-      followSearchRedirects &&
-      !hadExplicitFullText &&
-      getFullTextFromRoutedBrand(args.query, args.map)
-    ) {
-      args.fullText = undefined
-    } else {
-      if (!args.fullText) {
-        args.fullText =
-          getFullTextFromMap(args.query, args.map) ??
-          getFullTextFromSelectedFacets(args.selectedFacets) ??
-          getFullTextFromRoutedBrand(args.query, args.map)
-      }
-
-      args.selectedFacets = replaceRoutedBrandWithTerm(
-        args.selectedFacets,
-        args.fullText,
-        hadExplicitFullText
-      )
-    }
+    args = await applyFullTextAndBrandRouting(ctx, args, hadExplicitFullText)
 
     const { selectedFacets } = args
 
-    const result = await fetchProductSearch(
-      ctx,
-      args,
-      selectedFacets ?? [],
-      shippingOptions
-    )
-
-    // Eliminar cuando se pase a main
-    debugLog(ctx, 'productSearch:output', { result })
-
-    return result
+    return fetchProductSearch(ctx, args, selectedFacets ?? [], shippingOptions)
   },
 
   sponsoredProducts: async (_: any, args: ProductSearchInput, ctx: any) => {

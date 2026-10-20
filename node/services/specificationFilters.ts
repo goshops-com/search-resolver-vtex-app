@@ -1,6 +1,3 @@
-import { debugLog } from './debugLog'
-import { recordSpan, timed } from './timing'
-
 /**
  * VBase prefixes the bucket with `vendor.app-name.` and rejects names over 50
  * characters: `specification-field` overflowed it, so the map was never saved
@@ -45,55 +42,27 @@ export async function fetchFilterableFieldIds(
 
   const known =
     memory ??
-    (await timed(
-      ctx,
-      'vbase.filterableFields',
-      () =>
-        vbase
-          .getJSON<FilterableFieldMap>(
-            SPECIFICATION_FIELD_BUCKET,
-            FILTERABLE_FIELDS_FILE,
-            true
-          )
-          .catch((error) => {
-            debugLog(
-              ctx,
-              'vbase:filterableFields:readFailed',
-              { error: error?.message, status: error?.response?.status },
-              'error'
-            )
-
-            return null
-          }),
-      (map) => ({ knownFields: map ? Object.keys(map).length : 0 })
-    )) ?? {}
+    (await vbase
+      .getJSON<FilterableFieldMap>(
+        SPECIFICATION_FIELD_BUCKET,
+        FILTERABLE_FIELDS_FILE,
+        true
+      )
+      .catch(() => null)) ??
+    {}
 
   const unknownIds = fieldIds.filter((fieldId) => !(fieldId in known))
-
-  if (memory) {
-    recordSpan(ctx, 'filterableFields.memoryHit', Date.now(), {
-      knownFields: Object.keys(memory).length,
-    })
-  }
 
   if (memory && unknownIds.length === 0) {
     return pickFilterable(known, fieldIds)
   }
 
-  const resolved = await timed(
-    ctx,
-    'catalog.unknownFields',
-    () =>
-      Promise.all(
-        unknownIds.map(async (fieldId) => {
-          const field = await search
-            .specificationField(fieldId)
-            .catch(() => null)
+  const resolved = await Promise.all(
+    unknownIds.map(async (fieldId) => {
+      const field = await search.specificationField(fieldId).catch(() => null)
 
-          return Boolean(field?.IsFilter && field.IsActive)
-        })
-      ),
-    () => ({ unknown: unknownIds.length })
+      return Boolean(field?.IsFilter && field.IsActive)
+    })
   )
 
   if (!memory || unknownIds.length > 0) {
@@ -107,30 +76,9 @@ export async function fetchFilterableFieldIds(
 
     // The next request should not pay for these fields again; a failed write
     // only costs a repeated lookup.
-    const saveStarted = Date.now()
-
     vbase
       .saveJSON(SPECIFICATION_FIELD_BUCKET, FILTERABLE_FIELDS_FILE, known)
-      .then(() =>
-        debugLog(ctx, 'vbase:filterableFields:saved', {
-          fields: Object.keys(known).length,
-          durationMs: Date.now() - saveStarted,
-        })
-      )
-      .catch((error) =>
-        debugLog(
-          ctx,
-          'vbase:filterableFields:saveFailed',
-          {
-            fields: Object.keys(known).length,
-            durationMs: Date.now() - saveStarted,
-            error: error?.message,
-            status: error?.response?.status,
-            data: error?.response?.data,
-          },
-          'error'
-        )
-      )
+      .catch(() => undefined)
   }
 
   return pickFilterable(known, fieldIds)

@@ -5,7 +5,6 @@ import {
   extractSpecificationFieldIds,
   fetchFilterableFieldIds,
 } from './specificationFilters'
-import { recordSpan, timed } from './timing'
 
 /**
  * Short enough that prices and stock stay as fresh as the catalog's own cache,
@@ -72,8 +71,6 @@ export async function fetchGoPersonalResultSet(
   const cached = recent.get(key)
 
   if (cached && cached.expiresAt > Date.now()) {
-    recordSpan(ctx, 'resultSet.cacheHit', Date.now())
-
     return cached.resultSet
   }
 
@@ -82,12 +79,10 @@ export async function fetchGoPersonalResultSet(
   const pending = inflight.get(key)
 
   if (pending) {
-    return timed(ctx, 'resultSet.awaitInflight', () => pending)
+    return pending
   }
 
-  const request = timed(ctx, 'resultSet.load', () =>
-    loadResultSet(ctx, options, session)
-  )
+  const request = loadResultSet(ctx, options, session)
     .then((resultSet) => {
       // An empty set usually means the catalog failed; keeping it would serve
       // an empty grid until it expires.
@@ -123,32 +118,23 @@ async function loadResultSet(
   options: ResultSetOptions,
   session: ReturnType<typeof getGoPersonalSession>
 ): Promise<GoPersonalResultSet> {
-  const { productIds, searchId, indexedProducts } = await timed(
-    ctx,
-    'gopersonal.search',
-    () =>
-      fetchGoPersonalRankedIds(ctx, {
-        project_id: options.projectId,
-        query: options.query,
-        limit: options.limit,
-        ...session,
-      }),
-    (ranked) => ({
-      ids: ranked.productIds.length,
-      indexed: ranked.indexedProducts.size,
+  const { productIds, searchId, indexedProducts } =
+    await fetchGoPersonalRankedIds(ctx, {
+      project_id: options.projectId,
+      query: options.query,
+      limit: options.limit,
+      ...session,
     })
-  )
 
   // Products the sync indexed come with the search itself; only the rest is
   // hydrated from the catalog, and everything is put back into GoPersonal's
   // ranking.
   const missingIds = productIds.filter((id) => !indexedProducts.has(id))
 
-  const hydrated = await timed(
+  const hydrated = await hydrateProductsFromCatalog(
     ctx,
-    'catalog.hydrate',
-    () => hydrateProductsFromCatalog(ctx, missingIds, options.salesChannel),
-    (found) => ({ requested: missingIds.length, found: found.length })
+    missingIds,
+    options.salesChannel
   )
 
   const hydratedById = new Map(
@@ -167,12 +153,7 @@ async function loadResultSet(
 
   const fieldIds = extractSpecificationFieldIds(products)
 
-  const filterableFieldIds = await timed(
-    ctx,
-    'catalog.filterableFields',
-    () => fetchFilterableFieldIds(ctx, fieldIds),
-    (filterable) => ({ fields: fieldIds.length, filterable: filterable.size })
-  )
+  const filterableFieldIds = await fetchFilterableFieldIds(ctx, fieldIds)
 
   return { productIds, searchId, products, filterableFieldIds }
 }
