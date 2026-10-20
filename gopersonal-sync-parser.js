@@ -100,13 +100,10 @@ function transformProducts(products) {
             link: product.link_text ? `/${product.link_text}/p` : link,
             allSpecifications,
             allSpecificationsGroups,
-            // Facets read only the name, field id and values; the visibility
-            // flag filters specificationGroups.
             completeSpecifications: (completeSpecifications || []).map(spec => ({
                 Name: spec.Name,
                 FieldId: spec.FieldId,
                 IsOnProductDetails: spec.IsOnProductDetails,
-                // Position stays so the resolver still spots the values as PascalCase.
                 Values: (spec.Values || []).map(value => ({ Value: value.Value, Position: value.Position })),
             })),
             items: (items || []).map(item => ({
@@ -118,7 +115,6 @@ function transformProducts(products) {
                 attachments: item.attachments || [],
                 Videos: item.Videos || [],
                 variations: item.variations || [],
-                // imageUrl and imageLabel are what the summaries render.
                 images: (item.images || []).map(image => ({
                     imageId: image.imageId,
                     imageLabel: image.imageLabel,
@@ -129,8 +125,6 @@ function transformProducts(products) {
                     addToCartLink: "",
                     commertialOffer: {
                         ...seller.commertialOffer,
-                        // The storefront asks for the longest interest-free plan,
-                        // and spotPrice for the cheapest single payment.
                         Installments: (seller.commertialOffer?.Installments || [])
                             .reduce((kept, installment) => {
                                 const slot = installment.NumberOfInstallments === 1 ? 0 : 1;
