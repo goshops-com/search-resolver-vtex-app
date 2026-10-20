@@ -91,7 +91,6 @@ function transformProducts(products) {
             productReferenceCode: rawProductReferenceCode,
             categoryId: product.category_ids,
             productTitle,
-            metaTagDescription,
             releaseDate,
             clusterHighlights: product.clusterHighlights,
             productClusters: product.productClusters,
@@ -99,10 +98,17 @@ function transformProducts(products) {
             categories,
             categoriesIds,
             link: product.link_text ? `/${product.link_text}/p` : link,
-            description: product.description,
             allSpecifications,
             allSpecificationsGroups,
-            completeSpecifications,
+            // Facets read only the name, field id and values; the visibility
+            // flag filters specificationGroups.
+            completeSpecifications: (completeSpecifications || []).map(spec => ({
+                Name: spec.Name,
+                FieldId: spec.FieldId,
+                IsOnProductDetails: spec.IsOnProductDetails,
+                // Position stays so the resolver still spots the values as PascalCase.
+                Values: (spec.Values || []).map(value => ({ Value: value.Value, Position: value.Position })),
+            })),
             items: (items || []).map(item => ({
                 ...item,
                 complementName: item.complementName || "",
@@ -112,13 +118,37 @@ function transformProducts(products) {
                 attachments: item.attachments || [],
                 Videos: item.Videos || [],
                 variations: item.variations || [],
-                images: item.images || [],
+                // imageUrl and imageLabel are what the summaries render.
+                images: (item.images || []).map(image => ({
+                    imageId: image.imageId,
+                    imageLabel: image.imageLabel,
+                    imageUrl: image.imageUrl,
+                })),
                 sellers: (item.sellers || []).map(seller => ({
                     ...seller,
                     addToCartLink: "",
                     commertialOffer: {
                         ...seller.commertialOffer,
-                        Installments: seller.commertialOffer?.Installments || [],
+                        // The storefront asks for the longest interest-free plan,
+                        // and spotPrice for the cheapest single payment.
+                        Installments: (seller.commertialOffer?.Installments || [])
+                            .reduce((kept, installment) => {
+                                const slot = installment.NumberOfInstallments === 1 ? 0 : 1;
+                                const current = kept[slot];
+                                if (slot === 0 ? !current || installment.Value < current.Value
+                                    : !installment.InterestRate && (!current || installment.NumberOfInstallments > current.NumberOfInstallments)) {
+                                    kept[slot] = {
+                                        Value: installment.Value,
+                                        InterestRate: installment.InterestRate,
+                                        TotalValuePlusInterestRate: installment.TotalValuePlusInterestRate,
+                                        NumberOfInstallments: installment.NumberOfInstallments,
+                                        PaymentSystemName: installment.PaymentSystemName,
+                                        Name: installment.Name,
+                                    };
+                                }
+                                return kept;
+                            }, [])
+                            .filter(Boolean),
                         Teasers: seller.commertialOffer?.Teasers || [],
                         DiscountHighLight: seller.commertialOffer?.DiscountHighLight || [],
                         GiftSkuIds: seller.commertialOffer?.GiftSkuIds || [],
