@@ -1,16 +1,15 @@
 /* Search Analytics - registers every search's full result set in GoPersonal.
    On a search results page it collects the item ids of ALL pages (not just the
-   first) by replaying the store's own search query, then POSTs them to
-   /public/search-result/<projectId>. */
+   first) by asking GoPersonal's /search for the whole ranked set, then POSTs them
+   to /public/search-result/<projectId>. */
 (function () {
   var VARIANT = "{{gs_variantId}}";
   var PROJECT = "6a91a8f3a5da3cc7150a4c03";
   var ENDPOINT = "https://discover.gopersonal.ai/public/search-result/" + PROJECT;
-  var GRAPHQL = "/_v/public/graphql/v1";
+  var SEARCH = "https://search.gopersonal.ai/search";
 
   // Editable from the panel. parseInt keeps this valid if a placeholder is not resolved.
-  var PAGE_SIZE = parseInt("{{PageSize}}", 10) || 50;
-  var MAX_RESULTS = parseInt("{{MaxResults}}", 10) || 500;
+  var MAX_RESULTS = parseInt("{{MaxResults}}", 10) || 250;
 
   /* The SDK re-injects this script on every VTEX navigation, so the guard state
      lives on window, keyed by variant, instead of in this closure.
@@ -61,16 +60,6 @@
       window.gsLog.apply(window, ["[gp-search-analytics]"].concat([].slice.call(arguments)));
     }
   }
-
-  /* Only ask for the ids: the full ProductFragment the store uses would pull
-     images, prices and simulations we do not need. */
-  var QUERY =
-    "query GPSearchAllIds($query:String,$fullText:String,$from:Int,$to:Int," +
-    "$selectedFacets:[SelectedFacetInput],$orderBy:String,$variant:String){" +
-    "productSearch(query:$query,fullText:$fullText,from:$from,to:$to," +
-    "selectedFacets:$selectedFacets,orderBy:$orderBy,variant:$variant," +
-    "productOriginVtex:false,hideUnavailableItems:true,simulationBehavior:default)" +
-    "@context(provider:\"vtex.search-graphql\"){recordsFiltered products{productId}}}";
 
   // Compare terms coming from different places (URL path, query string, GraphQL
   // args) without tripping on case, accents, "+"/"-" separators or encoding.
@@ -134,49 +123,30 @@
     return best;
   }
 
-  function fetchPage(args, from) {
-    var variables = {
-      query: args.query,
-      fullText: args.fullText || args.query,
-      selectedFacets: args.selectedFacets || [],
-      orderBy: args.orderBy || "",
-      variant: args.variant,
-      from: from,
-      to: from + PAGE_SIZE - 1
-    };
-    return fetch(GRAPHQL, {
+  /* return_all_ids answers every ranked id in one call, so the result set is not
+     walked page by page through the store; page_size 1 skips the hit payloads. */
+  function collectAllIds(args) {
+    return fetch(SEARCH, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ query: QUERY, variables: variables })
+      body: JSON.stringify({
+        project_id: PROJECT,
+        query: args.fullText || args.query,
+        limit: MAX_RESULTS,
+        page_size: 1,
+        return_all_ids: true
+      })
     })
       .then(function (r) { return r.json(); })
       .then(function (j) {
-        if (j && j.errors && j.errors.length) throw new Error(j.errors[0].message);
-        return (j && j.data && j.data.productSearch) || null;
-      });
-  }
-
-  // Walks every page of the result set, preserving ranking order and dropping
-  // the duplicates the engine returns across pages.
-  function collectAllIds(args) {
-    var ids = [], seen = {}, total = null;
-
-    function nextPage(from) {
-      if (from >= MAX_RESULTS) return Promise.resolve(ids);
-      return fetchPage(args, from).then(function (ps) {
-        var products = (ps && ps.products) || [];
-        if (ps && typeof ps.recordsFiltered === "number") total = ps.recordsFiltered;
-        for (var i = 0; i < products.length; i++) {
-          var id = products[i] && products[i].productId;
-          if (id && !seen[id]) { seen[id] = 1; ids.push(String(id)); }
+        var ids = [], seen = {};
+        var found = (j && j.product_ids) || [];
+        for (var i = 0; i < found.length; i++) {
+          var id = String(found[i]);
+          if (!seen[id]) { seen[id] = 1; ids.push(id); }
         }
-        var done = products.length < PAGE_SIZE || (total !== null && from + products.length >= total);
-        return done ? ids : nextPage(from + PAGE_SIZE);
+        return ids;
       });
-    }
-
-    return nextPage(0);
   }
 
   /* Early in the SDK's lifecycle getSession() returns the session object directly
