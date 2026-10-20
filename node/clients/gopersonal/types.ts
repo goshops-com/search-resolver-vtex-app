@@ -14,6 +14,8 @@ export interface GoPersonalSearchBody {
   session_id?: string
   /** Returns `product_ids` with every ranked id, not just the current page. */
   return_all_ids?: boolean
+  /** Payload fields each hit carries; every indexed field when omitted. */
+  attributes?: string[]
 }
 
 /** A single image entry inside a hit payload. */

@@ -116,7 +116,7 @@ export type GoPersonalRankedIds = {
  */
 export async function fetchGoPersonalRankedIds(
   ctx: Context,
-  body: Omit<GoPersonalSearchBody, 'page_size' | 'return_all_ids'>
+  body: Omit<GoPersonalSearchBody, 'page_size' | 'return_all_ids' | 'attributes'>
 ): Promise<GoPersonalRankedIds> {
   const { gopersonal } = ctx.clients
 
@@ -124,6 +124,10 @@ export async function fetchGoPersonalRankedIds(
     ...body,
     page_size: GOPERSONAL_MAX_PAGE_SIZE,
     return_all_ids: true,
+    // `vtex_product` is the only payload field read; the rest of the indexed
+    // document (specifications flattened as keys, images…) roughly triples the
+    // response for nothing.
+    attributes: ['vtex_product'],
   })
 
   const searchId = response.search_id

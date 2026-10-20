@@ -468,6 +468,7 @@ describe('fetchProductSearch service', () => {
         limit: config.gopersonal.limit,
         page_size: 250,
         return_all_ids: true,
+        attributes: ['vtex_product'],
       })
     })
   })
