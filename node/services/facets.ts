@@ -14,6 +14,7 @@ import {
   filterProductsBySelectedFacets,
 } from './gopersonalLocalFacets'
 import { fetchGoPersonalResultSet } from './gopersonalResultSet'
+import { searchSlugify } from '../utils/slug'
 
 type SegmentData = ReturnType<typeof extractSegmentData>
 
@@ -103,20 +104,48 @@ async function fetchFacetsFromGoPersonal(
     limit: settings.gopersonalLimit,
   })
 
+  const facets = buildFacetsFromProducts(
+    products,
+    settings.facets,
+    selectedFacets,
+    filterableFieldIds
+  )
+
+  const recordsFiltered = filterProductsBySelectedFacets(
+    products,
+    selectedFacets,
+    filterableFieldIds
+  ).length
+
+  // Same shape Intelligent Search answers: one crumb per selected facet, each
+  // linking to the search narrowed down to it, and named after the facet value
+  // the shopper sees rather than its slug.
+  const breadcrumb = (selectedFacets ?? []).map((facet, index, all) => {
+    const trail = all.slice(0, index + 1)
+    const value =
+      facet.key === 'ft'
+        ? undefined
+        : facets
+            .flatMap((group) => group.values)
+            .find(
+              (candidate) =>
+                candidate.Map === facet.key &&
+                candidate.Value === searchSlugify(facet.value)
+            )
+
+    return {
+      name: value?.Name ?? facet.value,
+      href: `/${trail.map((crumb) => crumb.value).join('/')}?map=${trail
+        .map((crumb) => crumb.key)
+        .join(',')}`,
+    }
+  })
+
   return {
-    facets: buildFacetsFromProducts(
-      products,
-      settings.facets,
-      selectedFacets,
-      filterableFieldIds
-    ),
-    recordsFiltered: filterProductsBySelectedFacets(
-      products,
-      selectedFacets,
-      filterableFieldIds
-    ).length,
+    facets,
+    recordsFiltered,
     sampling: false,
-    breadcrumb: [],
+    breadcrumb,
     // The storefront rebuilds every facet link on top of these, so they must
     // describe the search itself: an empty `map` makes each filter click drop
     // the term and navigate to the plain brand/category page instead.

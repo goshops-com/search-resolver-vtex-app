@@ -118,26 +118,42 @@ async function loadResultSet(
   options: ResultSetOptions,
   session: ReturnType<typeof getGoPersonalSession>
 ): Promise<GoPersonalResultSet> {
-  const { productIds, searchId } = await fetchGoPersonalRankedIds(ctx, {
-    project_id: options.projectId,
-    query: options.query,
-    limit: options.limit,
-    ...session,
-  })
+  const { productIds, searchId, indexedProducts } =
+    await fetchGoPersonalRankedIds(ctx, {
+      project_id: options.projectId,
+      query: options.query,
+      limit: options.limit,
+      ...session,
+    })
 
-  // GoPersonal only ranks; the catalog is the source of truth for price,
-  // stock, sellers and SKUs, so the ranked ids are hydrated into real catalog
-  // products and re-sorted back into GoPersonal's ranking.
-  const products = await hydrateProductsFromCatalog(
+  // Products the sync indexed come with the search itself; only the rest is
+  // hydrated from the catalog, and everything is put back into GoPersonal's
+  // ranking.
+  const missingIds = productIds.filter((id) => !indexedProducts.has(id))
+
+  const hydrated = await hydrateProductsFromCatalog(
     ctx,
-    productIds,
+    missingIds,
     options.salesChannel
   )
 
-  const filterableFieldIds = await fetchFilterableFieldIds(
-    ctx,
-    extractSpecificationFieldIds(products)
+  const hydratedById = new Map(
+    hydrated.map((product) => [String(product.productId), product])
   )
+
+  const products = productIds.reduce<SearchProduct[]>((ranked, id) => {
+    const product = indexedProducts.get(id) ?? hydratedById.get(id)
+
+    if (product) {
+      ranked.push(product)
+    }
+
+    return ranked
+  }, [])
+
+  const fieldIds = extractSpecificationFieldIds(products)
+
+  const filterableFieldIds = await fetchFilterableFieldIds(ctx, fieldIds)
 
   return { productIds, searchId, products, filterableFieldIds }
 }

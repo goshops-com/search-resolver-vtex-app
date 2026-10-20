@@ -3,7 +3,10 @@ import { ExternalClient } from '@vtex/api'
 
 import { config } from '../../config'
 
-import type { GoPersonalSearchBody, GoPersonalSearchResponse } from './types'
+import type {
+  GoPersonalSearchBody,
+  GoPersonalSearchResponse,
+} from './types'
 
 export class GoPersonal extends ExternalClient {
   constructor(context: IOContext, options?: InstanceOptions) {

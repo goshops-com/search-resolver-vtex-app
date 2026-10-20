@@ -7,13 +7,15 @@ export interface GoPersonalSearchBody {
   query?: string
   /** Size of the ranked set GoPersonal computes and stores. Capped at 2000. */
   limit?: number
-  /** Hits returned by this call. Capped at 100. */
+  /** Hits returned by this call. Capped at 250. */
   page_size?: number
   reranker?: string
   customer_id?: string
   session_id?: string
   /** Returns `product_ids` with every ranked id, not just the current page. */
   return_all_ids?: boolean
+  /** Payload fields each hit carries; every indexed field when omitted. */
+  attributes?: string[]
 }
 
 /** A single image entry inside a hit payload. */
@@ -55,6 +57,8 @@ export interface GoPersonalHitPayload {
   metadata?: GoPersonalMetadata[]
   stock?: string
   active?: number | string
+  /** The VTEX catalog product, as a JSON string, when the sync indexes it. */
+  vtex_product?: string
   [key: string]: unknown
 }
 

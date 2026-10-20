@@ -205,6 +205,52 @@ const replaceRoutedBrandWithTerm = (
     : [...kept, { key: 'ft', value: fullText }]
 }
 
+/**
+ * Derives `fullText` and may rewrite routed brand facets into an `ft` segment.
+ *
+ * When the store follows Intelligent Search redirects, a term that IS also a
+ * brand should stay on the brand page (`b` only). Promoting that route to a
+ * text search happens only when `followSearchRedirects` is off — which is what
+ * GoPersonal needs to rank the term instead of the brand catalogue.
+ */
+type RouteFullTextArgs = FullTextSignalArgs & {
+  query?: string
+  map?: string
+}
+
+const applyFullTextAndBrandRouting = async <T extends RouteFullTextArgs>(
+  ctx: Context,
+  args: T,
+  hadExplicitFullText: boolean
+): Promise<T> => {
+  const { followSearchRedirects } = await fetchAppSettings(ctx)
+
+  if (!args.fullText) {
+    if (followSearchRedirects) {
+      args.fullText =
+        (hadExplicitFullText
+          ? getFullTextFromMap(args.query, args.map)
+          : undefined) ??
+        getFullTextFromSelectedFacets(args.selectedFacets)
+    } else {
+      args.fullText =
+        getFullTextFromMap(args.query, args.map) ??
+        getFullTextFromSelectedFacets(args.selectedFacets) ??
+        getFullTextFromRoutedBrand(args.query, args.map)
+    }
+  }
+
+  if (!followSearchRedirects) {
+    args.selectedFacets = replaceRoutedBrandWithTerm(
+      args.selectedFacets,
+      args.fullText,
+      hadExplicitFullText
+    )
+  }
+
+  return args
+}
+
 export const getCompatibilityArgs = async <T extends QueryArgs>(
   ctx: Context,
   args: T
@@ -479,23 +525,10 @@ export const queries = {
     )
 
     args.selectedFacets = facets
-
     const hadExplicitFullText = hasExplicitFullText(args)
 
     args = await getCompatibilityArgsFromSelectedFacets(ctx, args)
-
-    if (!args.fullText) {
-      args.fullText =
-        getFullTextFromMap(args.query, args.map) ??
-        getFullTextFromSelectedFacets(args.selectedFacets) ??
-        getFullTextFromRoutedBrand(args.query, args.map)
-    }
-
-    args.selectedFacets = replaceRoutedBrandWithTerm(
-      args.selectedFacets,
-      args.fullText,
-      hadExplicitFullText
-    )
+    args = await applyFullTextAndBrandRouting(ctx, args, hadExplicitFullText)
 
     const { selectedFacets } = args
 
@@ -539,7 +572,6 @@ export const queries = {
     const productSearchArgs = {
       ...args,
       fullText: args.query,
-      __caller: 'query.products',
     } as unknown as ProductSearchInput
 
     const result = await fetchProductSearch(
@@ -587,18 +619,7 @@ export const queries = {
       })
     }
 
-    if (!args.fullText) {
-      args.fullText =
-        getFullTextFromMap(args.query, args.map) ??
-        getFullTextFromSelectedFacets(args.selectedFacets) ??
-        getFullTextFromRoutedBrand(args.query, args.map)
-    }
-
-    args.selectedFacets = replaceRoutedBrandWithTerm(
-      args.selectedFacets,
-      args.fullText,
-      hadExplicitFullText
-    )
+    args = await applyFullTextAndBrandRouting(ctx, args, hadExplicitFullText)
 
     const { selectedFacets } = args
 
@@ -765,7 +786,6 @@ export const queries = {
       from: 0,
       to: args.count ? args.count - 1 : 4,
       options: { allowRedirect: false },
-      __caller: 'query.productSuggestions',
     } as unknown as ProductSearchInput
 
     const result = await fetchProductSearch(

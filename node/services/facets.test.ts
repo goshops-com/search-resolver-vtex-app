@@ -160,6 +160,37 @@ describe('fetchFacets service', () => {
     ])
   })
 
+  it('answers one breadcrumb per selected facet, like Intelligent Search', async () => {
+    const ctx = createContext({
+      accountName: 'testaccount',
+      appSettings: { useGoPersonalSearch: true, gopersonalProjectId: 'proj-1' },
+      gopersonalSettings: {
+        search: { hits: [], product_ids: ['1'], total_results: 1 },
+      },
+      catalogProducts: [
+        { productId: '1', brand: 'JBL', categories: ['/Audio/Audifonos/'] },
+      ],
+    })
+
+    const selectedFacets = [
+      { key: 'ft', value: 'audifonos con bluetooth' },
+      { key: 'brand', value: 'jbl' },
+    ]
+
+    const result: any = await fetchFacets(ctx, {
+      args: { ...mockArgs, fullText: 'audifonos con bluetooth', selectedFacets },
+      selectedFacets,
+    })
+
+    expect(result.breadcrumb).toEqual([
+      {
+        name: 'audifonos con bluetooth',
+        href: '/audifonos con bluetooth?map=ft',
+      },
+      { name: 'JBL', href: '/audifonos con bluetooth/jbl?map=ft,brand' },
+    ])
+  })
+
   it('should set translated flag in context when tenant is present', async () => {
     const ctx = createContext({
       accountName: 'testaccount',

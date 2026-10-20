@@ -526,10 +526,11 @@ async function fetchProductSearchFromGoPersonal(
 
   const from = args.from ?? 0
   const to = args.to ?? from + filtered.length - 1
+  const page = filtered.slice(from, to + 1)
 
   return {
     searchState: args.searchState,
-    products: filtered.slice(from, to + 1),
+    products: page,
     recordsFiltered: filtered.length,
     searchId,
     facets,
@@ -567,17 +568,58 @@ export async function fetchProductSearch(
     searchEngine,
     gopersonalProjectId,
     gopersonalLimit,
+    followSearchRedirects,
     facets,
   } = await fetchAppSettings(ctx)
 
   const hasFullTextQuery = Boolean(args.fullText?.trim())
 
   if (hasFullTextQuery && searchEngine === 'gopersonal') {
-    return fetchProductSearchFromGoPersonal(ctx, args, selectedFacets, {
-      gopersonalProjectId,
-      gopersonalLimit,
-      facets,
-    })
+    const ranked = fetchProductSearchFromGoPersonal(
+      ctx,
+      args,
+      selectedFacets,
+      { gopersonalProjectId, gopersonalLimit, facets }
+    )
+
+    // A term the store redirects in Intelligent Search (e.g. to a category
+    // page) is answered with that redirect, as the native search does. Only
+    // the bare term is checked: once a filter is picked the shopper is already
+    // on the search page. GoPersonal ranks in parallel so a term without a
+    // redirect pays no extra latency, and a failed check never blocks it.
+    const onlyTerm = selectedFacets.every((facet) => facet.key === 'ft')
+
+    if (followSearchRedirects && onlyTerm) {
+      const redirect = await ctx.clients.intsch
+        .productSearch(
+          {
+            query: args.fullText,
+            from: 0,
+            to: 0,
+            salesChannel: args.salesChannel,
+          },
+          ''
+        )
+        .then((result) => result.redirect)
+        .catch(() => undefined)
+
+      if (redirect) {
+        // Nobody awaits the ranking anymore; keep its failure from going
+        // unhandled.
+        ranked.catch(() => undefined)
+
+        const redirected: Awaited<typeof ranked> = {
+          searchState: args.searchState,
+          products: [],
+          recordsFiltered: 0,
+          redirect,
+        }
+
+        return redirected
+      }
+    }
+
+    return ranked
   }
 
   const segment = await getOrCreateSegment(ctx)

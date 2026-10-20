@@ -1,6 +1,6 @@
 import { config } from '../config'
 import { createContext } from '../mocks/contextFactory'
-import { FACET_DEFAULTS, fetchAppSettings } from './settings'
+import { FACET_DEFAULTS, GOPERSONAL_DEFAULTS, fetchAppSettings } from './settings'
 
 describe('fetchAppSettings', () => {
   it('returns configured app settings with GoPersonal defaults', async () => {
@@ -19,6 +19,7 @@ describe('fetchAppSettings', () => {
       searchEngine: 'gopersonal',
       gopersonalProjectId: 'proj-1',
       gopersonalLimit: config.gopersonal.limit,
+      followSearchRedirects: true,
       facets: FACET_DEFAULTS,
     })
   })
@@ -96,8 +97,9 @@ describe('fetchAppSettings', () => {
       shouldUseNewPDPEndpoint: false,
       shouldUseNewPLPEndpoint: true,
       searchEngine: 'vtex',
-      gopersonalProjectId: '',
+      gopersonalProjectId: GOPERSONAL_DEFAULTS.gopersonalProjectId,
       gopersonalLimit: config.gopersonal.limit,
+      followSearchRedirects: true,
       facets: FACET_DEFAULTS,
     })
   })

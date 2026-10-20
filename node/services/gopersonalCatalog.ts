@@ -59,15 +59,17 @@ export async function hydrateProductsFromCatalog(
 
   const batches = await Promise.all(
     chunk(productIds, CATALOG_IDS_PER_REQUEST).map((ids) =>
-      search.productsById(ids, vtexSegment, salesChannel).catch((error) => {
-        ctx.vtex.logger.error({
-          message: 'GoPersonal: failed to hydrate products from catalog',
-          error: error.message,
-          idsCount: ids.length,
-        })
+      search
+        .productsById(ids, vtexSegment, salesChannel)
+        .catch((error) => {
+          ctx.vtex.logger.error({
+            message: 'GoPersonal: failed to hydrate products from catalog',
+            error: error.message,
+            idsCount: ids.length,
+          })
 
-        return [] as SearchProduct[]
-      })
+          return [] as SearchProduct[]
+        })
     )
   )
 

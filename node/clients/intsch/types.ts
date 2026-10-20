@@ -137,6 +137,8 @@ export type ProductSearchResponse = {
   translatedArgs?: unknown
   searchId?: string
   pagination?: unknown
+  /** URL the store configured in Intelligent Search for this term. */
+  redirect?: string | null
 }
 
 /** Query path, params, and non-auth headers sent with product search (for logging). */
