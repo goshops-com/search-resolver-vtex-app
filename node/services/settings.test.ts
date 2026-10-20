@@ -19,6 +19,7 @@ describe('fetchAppSettings', () => {
       searchEngine: 'gopersonal',
       gopersonalProjectId: 'proj-1',
       gopersonalLimit: config.gopersonal.limit,
+      followSearchRedirects: true,
       facets: FACET_DEFAULTS,
     })
   })
@@ -98,6 +99,7 @@ describe('fetchAppSettings', () => {
       searchEngine: 'vtex',
       gopersonalProjectId: GOPERSONAL_DEFAULTS.gopersonalProjectId,
       gopersonalLimit: config.gopersonal.limit,
+      followSearchRedirects: true,
       facets: FACET_DEFAULTS,
     })
   })

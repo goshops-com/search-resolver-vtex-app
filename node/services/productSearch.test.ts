@@ -59,6 +59,7 @@ describe('fetchProductSearch service', () => {
         appSettings: {
           useGoPersonalSearch: true,
           gopersonalProjectId: 'proj-1',
+          followSearchRedirects: false,
         },
         gopersonalSettings: {
           search: { ...gopersonalResponse, total_results: 1 },
@@ -172,6 +173,7 @@ describe('fetchProductSearch service', () => {
           shouldUseNewPLPEndpoint: true,
           useGoPersonalSearch: true,
           gopersonalProjectId: 'proj-1',
+          followSearchRedirects: false,
         },
         gopersonalSettings: { search: gopersonalResponse },
       })
@@ -180,6 +182,96 @@ describe('fetchProductSearch service', () => {
 
       expect(ctx.clients.gopersonal.search).toHaveBeenCalled()
       expect(ctx.clients.intsch.productSearch).not.toHaveBeenCalled()
+    })
+
+    it('answers the redirect Intelligent Search has for the term by default', async () => {
+      const ctx = createContext({
+        accountName: 'testaccount',
+        appSettings: { useGoPersonalSearch: true, gopersonalProjectId: 'proj-1' },
+        gopersonalSettings: { search: gopersonalResponse },
+        intschSettings: {
+          productSearch: {
+            products: [],
+            recordsFiltered: 0,
+            redirect: 'https://store.com/cables/cables-hdmi',
+          },
+        },
+        catalogProducts: [catalogProduct('1')],
+      })
+
+      const result = await fetchProductSearch(ctx, mockArgs, mockSelectedFacets)
+
+      expect(result.redirect).toBe('https://store.com/cables/cables-hdmi')
+      expect(result.products).toEqual([])
+    })
+
+    it('ranks in GoPersonal when the term has no redirect', async () => {
+      const ctx = createContext({
+        accountName: 'testaccount',
+        appSettings: { useGoPersonalSearch: true, gopersonalProjectId: 'proj-1' },
+        gopersonalSettings: { search: gopersonalResponse },
+        intschSettings: { productSearch: { products: [], redirect: null } },
+        catalogProducts: [catalogProduct('1')],
+      })
+
+      const result = await fetchProductSearch(ctx, mockArgs, mockSelectedFacets)
+
+      expect(result.redirect).toBeUndefined()
+      expect(result.products).toHaveLength(1)
+    })
+
+    it('ignores the redirect when followSearchRedirects is turned off', async () => {
+      const ctx = createContext({
+        accountName: 'testaccount',
+        appSettings: {
+          useGoPersonalSearch: true,
+          gopersonalProjectId: 'proj-1',
+          followSearchRedirects: false,
+        },
+        gopersonalSettings: { search: gopersonalResponse },
+        intschSettings: {
+          productSearch: { products: [], redirect: 'https://store.com/x' },
+        },
+        catalogProducts: [catalogProduct('1')],
+      })
+
+      const result = await fetchProductSearch(ctx, mockArgs, mockSelectedFacets)
+
+      expect(ctx.clients.intsch.productSearch).not.toHaveBeenCalled()
+      expect(result.products).toHaveLength(1)
+    })
+
+    it('does not look for a redirect once a filter is picked', async () => {
+      const ctx = createContext({
+        accountName: 'testaccount',
+        appSettings: { useGoPersonalSearch: true, gopersonalProjectId: 'proj-1' },
+        gopersonalSettings: { search: gopersonalResponse },
+        intschSettings: {
+          productSearch: { products: [], redirect: 'https://store.com/x' },
+        },
+        catalogProducts: [catalogProduct('1')],
+      })
+
+      await fetchProductSearch(ctx, mockArgs, [
+        { key: 'ft', value: 'test query' },
+        { key: 'brand', value: 'hp' },
+      ])
+
+      expect(ctx.clients.intsch.productSearch).not.toHaveBeenCalled()
+    })
+
+    it('keeps ranking in GoPersonal when the redirect check fails', async () => {
+      const ctx = createContext({
+        accountName: 'testaccount',
+        appSettings: { useGoPersonalSearch: true, gopersonalProjectId: 'proj-1' },
+        gopersonalSettings: { search: gopersonalResponse },
+        intschSettings: { productSearch: new Error('boom') },
+        catalogProducts: [catalogProduct('1')],
+      })
+
+      const result = await fetchProductSearch(ctx, mockArgs, mockSelectedFacets)
+
+      expect(result.products).toHaveLength(1)
     })
 
     it('does NOT route to GoPersonal when the query is empty (catalog navigation)', async () => {

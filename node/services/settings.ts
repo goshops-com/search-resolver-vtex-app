@@ -17,6 +17,7 @@ type AppSettings = {
   searchEngine: SearchEngine
   gopersonalProjectId: string
   gopersonalLimit: number
+  followSearchRedirects: boolean
   facets: FacetSettings
 }
 
@@ -26,6 +27,7 @@ type StoredSettings = Partial<{
   gopersonalProjectId: string
   gopersonalLimit: number
   useGoPersonalSearch: boolean
+  followSearchRedirects: boolean
   brandGroupName: string
   priceGroupName: string
   categoryLevelNames: string[]
@@ -45,6 +47,9 @@ const FORCE_NEW_PDP_HEADER = 'x-vtex-force-new-pdp-endpoint'
 /** Mirrors `settingsSchema.properties.useGoPersonalSearch.default` in the
  * manifest, which is what the admin shows before anyone saves the form. */
 const MANIFEST_USE_GOPERSONAL_DEFAULT = false
+
+/** Mirrors `settingsSchema.properties.followSearchRedirects.default`. */
+const MANIFEST_FOLLOW_SEARCH_REDIRECTS_DEFAULT = true
 
 /** Mirror of the `default` each facet property declares in the manifest.
  * `getAppSettings` returns nothing for a property until the admin saves the
@@ -127,6 +132,9 @@ export async function fetchAppSettings(ctx: Context): Promise<AppSettings> {
       ),
       gopersonalProjectId,
       gopersonalLimit: GOPERSONAL_DEFAULTS.gopersonalLimit,
+      followSearchRedirects:
+        settings.followSearchRedirects ??
+        MANIFEST_FOLLOW_SEARCH_REDIRECTS_DEFAULT,
       facets: resolveFacetSettings(settings),
     }
   } catch (error) {
@@ -140,6 +148,7 @@ export async function fetchAppSettings(ctx: Context): Promise<AppSettings> {
       shouldUseNewPLPEndpoint: forceNewPLP,
       searchEngine: 'vtex',
       ...GOPERSONAL_DEFAULTS,
+      followSearchRedirects: MANIFEST_FOLLOW_SEARCH_REDIRECTS_DEFAULT,
       facets: FACET_DEFAULTS,
     }
   }

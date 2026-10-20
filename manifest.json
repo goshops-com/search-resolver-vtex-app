@@ -26,6 +26,12 @@
         "type": "boolean",
         "default": false
       },
+      "followSearchRedirects": {
+        "title": "Follow the search redirects configured in Intelligent Search",
+        "description": "When checked, a term that has a redirect configured in Intelligent Search (for example one that leads to a category page) takes the shopper to that page instead of being searched in GoPersonal.",
+        "type": "boolean",
+        "default": true
+      },
       "gopersonalProjectId": {
         "title": "GoPersonal project id",
         "type": "string",
